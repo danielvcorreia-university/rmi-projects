@@ -101,15 +101,17 @@ class MyRob(CRobLinkAngs):
 
     # In this map the center of cell (i,j), (i in 0..6, j in 0..13) is mapped to labMap[i*2][j*2].
     # to know if there is a wall on top of cell(i,j) (i in 0..5), check if the value of labMap[i*2+1][j*2] is space or not
-    def setMap(self, labMap):
+    def setMap(self, labMap, filelabMap):
         self.labMap = labMap
+        self.filelabMap = filelabMap
 
     def printMap(self, outMap=None):
-        for l in reversed(self.labMap):
+        for l in reversed(self.filelabMap):
             print(''.join([str(l) for l in l]), file=outMap)
 
     def fillMap(self, x, y, symbol):
         self.labMap[y][x] = symbol
+        self.filelabMap[y-1][x-1] = symbol
 
     def calcTurnLeftDir(self, dir):
         if dir > -20 and dir < 20:
@@ -289,11 +291,14 @@ class MyRob(CRobLinkAngs):
         #Coordenadas de 'X' que ainda têm um ' ' adjacente
         saveCoords = self.getUnopenedX()
         if saveCoords == []:
+            self.fillMap(28,14,"I")
+            self.printMap()
             outMap = open(mapfile,"w")
             self.printMap(outMap)
             outMap.close()
             print("finish()")
             self.finish()
+            exit(-1)
 
         #Calcular o caminho mais curto para um 'X' através de a*
         minpath = None
@@ -379,8 +384,8 @@ class MyRob(CRobLinkAngs):
         dirToRotate = 0
 
         diffY = 0
-        if realY % 2 < 0.31 and realY % 2 > 0.21 and (closestDir == 0 or closestDir == 180): diffY = -2 #se y=16.3 quero que diminua
-        if realY % 2 < 1.79 and realY % 2 > 1.69 and (closestDir == 0 or closestDir == 180): diffY = 2  #se y=15.7 quero que aumente
+        if realY % 2 < 0.41 and realY % 2 > 0.21 and (closestDir == 0 or closestDir == 180): diffY = -2 #se y=16.3 quero que diminua
+        if realY % 2 < 1.79 and realY % 2 > 1.59 and (closestDir == 0 or closestDir == 180): diffY = 2  #se y=15.7 quero que aumente
 
 
         if action == "forward":
@@ -650,10 +655,11 @@ for i in range(1, len(sys.argv),2):
 
 if __name__ == '__main__':
     rob=MyRob(rob_name,pos,[0.0,90.0,-90.0,180.0],host)
-    labMap = [[' '] * (CELLCOLS*4-1) for i in range(CELLROWS*4-1) ] # mapa 55 por 27
-    rob.setMap(labMap)
+    labMap = [[' '] * (CELLCOLS*4) for i in range(CELLROWS*4) ]         # 56 a 28
+    filelabMap = [[' '] * (CELLCOLS*4-1) for i in range(CELLROWS*4-1) ] # mapa 55 por 27 para ficheiro
+    rob.setMap(labMap,filelabMap)
     if mapc != None:
-        rob.setMap(mapc.labMap)
+        rob.setMap(mapc.labMap,filelabMap)
         rob.printMap()
     
     rob.run()
