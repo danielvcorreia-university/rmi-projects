@@ -157,7 +157,7 @@ class MyRob(CRobLinkAngs):
         else: #if dir > -110 and dir < -70:
             return -90
 
-   def fillWalls(self, x, y, dir, center, left, right):
+    def fillWalls(self, x, y, dir, center, left, right):
         if dir > -20 and dir < 20:
             if center >= 1.1 and self.labMap[y][x+1] != 'X':
                 self.fillMap(x+1,y,'|')
