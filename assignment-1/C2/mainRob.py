@@ -90,7 +90,7 @@ def astar(maze, start, end):
             if child in open_list: index = open_list.index(child)
 
             if child not in closed_list and (index == None or child.g <= open_list[index].g) :
-                child.h = ((child.position[0] - end_node.position[0]) ** 2) + ((child.position[1] - end_node.position[1]) ** 2)
+                child.h = sqrt( ((child.position[0] - end_node.position[0]) ** 2) + ((child.position[1] - end_node.position[1]) ** 2) )
                 child.f = child.g + child.h
                 # Add the child to the open list
                 open_list.append(child)
@@ -155,35 +155,35 @@ class MyRob(CRobLinkAngs):
 
     def fillWalls(self, x, y, dir, center, left, right):
         if dir > -20 and dir < 20:
-            if center >= 1.1:
+            if center >= 1.1 and self.labMap[y][x+1] != 'X':
                 self.fillMap(x+1,y,'|')
-            if left >= 1.2:
+            if left >= 1.2 and self.labMap[y+1][x] != 'X':
                 self.fillMap(x,y+1,'-')
-            if right >= 1.2:
+            if right >= 1.2 and self.labMap[y-1][x] != 'X':
                 self.fillMap(x,y-1,'-')
 
         elif dir > 70 and dir < 110:
-            if center >= 1.1:
+            if center >= 1.1 and self.labMap[y+1][x] != 'X':
                 self.fillMap(x,y+1,'-')
-            if left >= 1.2:
+            if left >= 1.2 and self.labMap[y][x-1] != 'X':
                 self.fillMap(x-1,y,'|')
-            if right >= 1.2:
+            if right >= 1.2 and self.labMap[y][x+1] != 'X':
                 self.fillMap(x+1,y,'|')
 
         elif dir > 160 or dir < -160:
-            if center >= 1.1:
+            if center >= 1.1 and self.labMap[y][x-1] != 'X':
                 self.fillMap(x-1,y,'|')
-            if left >= 1.2:
+            if left >= 1.2 and self.labMap[y-1][x] != 'X':
                 self.fillMap(x,y-1,'-')
-            if right >= 1.2:
+            if right >= 1.2 and self.labMap[y+1][x] != 'X':
                 self.fillMap(x,y+1,'-')
 
         else: #if dir > -110 and dir < -70:
-            if center >= 1.1:
+            if center >= 1.1 and self.labMap[y-1][x] != 'X':
                 self.fillMap(x,y-1,'-')
-            if left >= 1.2:
+            if left >= 1.2 and self.labMap[y][x+1] != 'X':
                 self.fillMap(x+1,y,'|')
-            if right >= 1.2:
+            if right >= 1.2 and self.labMap[y][x-1] != 'X':
                 self.fillMap(x-1,y,'|')
 
     def checkIfFrontOld(self, x, y, dir):
@@ -389,7 +389,12 @@ class MyRob(CRobLinkAngs):
 
 
         if action == "forward":
-            print("X: "+str(realX)+", Y: "+str(realY)+", dir: "+str(dir))
+            #print("X: "+str(realX)+", Y: "+str(realY)+", dir: "+str(dir))
+            if self.measures.collision:
+                print('Turn around')
+                self.driveMotors(0.0,-0.0)
+                return ["turningRight", self.calcTurnAroundDir(dir), [(intrealX,intrealY)]]
+
             if ((realX % 2 < 0.21 or realX % 2 > 1.79) and (realY % 2 < 0.31 or realY % 2 > 1.69)) or ((realX % 2 < 0.31 or realX % 2 > 1.69) and (realY % 2 < 0.21 or realY % 2 > 1.79)):
                 #Caso seja um sitio novo
                 if labMap[intrealY][intrealX] == ' ':
@@ -404,7 +409,7 @@ class MyRob(CRobLinkAngs):
                         #Vira 180 graus caso tenha parede a esquerda E parede a direita
                         if self.measures.irSensor[right_id] >= 1.2 and  self.measures.irSensor[left_id] >= 1.2:
                             print('Turn around')
-                            self.driveMotors(0.0,-0.0)
+                            self.driveMotors(0.0,0.0)
                             return ["turningRight", self.calcTurnAroundDir(dir), path]
                         else:
                             #Vira a esquerda caso nao tenha parede a esquerda
@@ -420,12 +425,12 @@ class MyRob(CRobLinkAngs):
                             #     return ["turningRight", self.calcTurnRightDir(dir), path]
                             if self.measures.irSensor[right_id] <= 1.1:
                                 print('Rotate Right')
-                                self.driveMotors(0.0,-0.0)
+                                self.driveMotors(0.0,0.0)
                                 return ["turningRight", self.calcTurnRightDir(dir), path]
                             #Vira a direita
                             else :
                                 print('Rotate left')
-                                self.driveMotors(-0.0,0.0)
+                                self.driveMotors(0.0,0.0)
                                 return ["turningLeft", self.calcTurnLeftDir(dir), path]
                                 
 
@@ -536,7 +541,10 @@ class MyRob(CRobLinkAngs):
             #Não está no centro de nenhuma célula, continua em frente
             else:
                 if closestDir == 180 : diffY = 0
-                res = abs(dir) - abs(closestDir) - diffY
+                if closestDir == 0:
+                    res = dir - diffY
+                else:
+                    res = abs(dir) - abs(closestDir) - diffY
                 #Caso, devido ao erro dos motores, haja um desvio significativo na orientação, paramos para ajustar de novo
                 if abs(res) >= 2:
                     self.driveMotors(0.0,0.0)
@@ -547,6 +555,7 @@ class MyRob(CRobLinkAngs):
         
         elif action == "adjust":
             if value == 0:
+                self.driveMotors(0.05,0.05)
                 return ["forward", None, path]
 
         

@@ -157,37 +157,37 @@ class MyRob(CRobLinkAngs):
         else: #if dir > -110 and dir < -70:
             return -90
 
-    def fillWalls(self, x, y, dir, center, left, right):
+   def fillWalls(self, x, y, dir, center, left, right):
         if dir > -20 and dir < 20:
-            if center >= 1.1:
+            if center >= 1.1 and self.labMap[y][x+1] != 'X':
                 self.fillMap(x+1,y,'|')
-            if left >= 1.2:
+            if left >= 1.2 and self.labMap[y+1][x] != 'X':
                 self.fillMap(x,y+1,'-')
-            if right >= 1.2:
+            if right >= 1.2 and self.labMap[y-1][x] != 'X':
                 self.fillMap(x,y-1,'-')
 
         elif dir > 70 and dir < 110:
-            if center >= 1.1:
+            if center >= 1.1 and self.labMap[y+1][x] != 'X':
                 self.fillMap(x,y+1,'-')
-            if left >= 1.2:
+            if left >= 1.2 and self.labMap[y][x-1] != 'X':
                 self.fillMap(x-1,y,'|')
-            if right >= 1.2:
+            if right >= 1.2 and self.labMap[y][x+1] != 'X':
                 self.fillMap(x+1,y,'|')
 
         elif dir > 160 or dir < -160:
-            if center >= 1.1:
+            if center >= 1.1 and self.labMap[y][x-1] != 'X':
                 self.fillMap(x-1,y,'|')
-            if left >= 1.2:
+            if left >= 1.2 and self.labMap[y-1][x] != 'X':
                 self.fillMap(x,y-1,'-')
-            if right >= 1.2:
+            if right >= 1.2 and self.labMap[y+1][x] != 'X':
                 self.fillMap(x,y+1,'-')
 
         else: #if dir > -110 and dir < -70:
-            if center >= 1.1:
+            if center >= 1.1 and self.labMap[y-1][x] != 'X':
                 self.fillMap(x,y-1,'-')
-            if left >= 1.2:
+            if left >= 1.2 and self.labMap[y][x+1] != 'X':
                 self.fillMap(x+1,y,'|')
-            if right >= 1.2:
+            if right >= 1.2 and self.labMap[y][x-1] != 'X':
                 self.fillMap(x-1,y,'|')
 
     def checkIfFrontOld(self, x, y, dir):
