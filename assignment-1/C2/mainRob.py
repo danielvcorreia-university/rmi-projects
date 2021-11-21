@@ -565,7 +565,7 @@ class MyRob(CRobLinkAngs):
 
         elif action == "turningLeft":
             if self.checkCorrectDir(dir,value) == False:
-                if dir % 15 == 0:
+                #if dir % 15 == 0:
                     #print("turnLeft dir: "+str(dir)+" to "+str(value))
                 leftWheel = -0.08
                 rightWheel = 0.08
@@ -578,7 +578,7 @@ class MyRob(CRobLinkAngs):
 
         elif action == "turningRight":
             if self.checkCorrectDir(dir,value) == False:
-                if dir % 15 == 0:
+                #if dir % 15 == 0:
                     #print("turnRight dir: "+str(dir)+" to "+str(value))
                 leftWheel = 0.08
                 rightWheel = -0.08
