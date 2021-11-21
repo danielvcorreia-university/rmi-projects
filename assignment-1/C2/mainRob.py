@@ -445,6 +445,8 @@ class MyRob(CRobLinkAngs):
 
                     #Já chegou ao 'X' destino ou deu astar para si mesmo
                     if len(newpath) == 1: 
+                        rob.fillWalls(intrealX, intrealY, dir, self.measures.irSensor[center_id], self.measures.irSensor[left_id], self.measures.irSensor[right_id])
+                        rob.printMap()
                         #Verificar se precisa de rodar para apontar para a célula ' '
                         dirs = [-90, 90, 180, 0]
                         index = 0
@@ -508,6 +510,8 @@ class MyRob(CRobLinkAngs):
 
                     #Edge case: a* para si mesmo, por ter detetado old path a frente mas ter um ' ' adjacente
                     if len(minpath) == 1:
+                        rob.fillWalls(intrealX, intrealY, dir, self.measures.irSensor[center_id], self.measures.irSensor[left_id], self.measures.irSensor[right_id])
+                        rob.printMap()
                         #Verificar se precisa de rodar para apontar para a célula ' '
                         dirs = [-90, 90, 180, 0]
                         index = 0
