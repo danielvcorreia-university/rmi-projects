@@ -109,6 +109,9 @@ class MyRob(CRobLinkAngs):
     def printMap(self, outMap=None):
         for l in reversed(self.labMap):
             print(''.join([str(l) for l in l]), file=outMap)
+        print("----------------------------")
+        for l in reversed(self.minpathMap):
+            print(''.join([str(l) for l in l]))
 
     def fillMap(self, x, y, symbol):
         self.labMap[y][x] = symbol
@@ -308,27 +311,32 @@ class MyRob(CRobLinkAngs):
         return minpath
 
     def foundOptimalPath(self):
-        myPath = [(0,0)]
-        for i in range(0, len(self.beaconsList)-1):
+        myPath = [(28,14)]
+        for i in range(0, len(self.beaconsList)):
+            path = None
             if i == (len(self.beaconsList)-1):
                 path = astar(self.labMap,self.beaconsList[i], self.beaconsList[0])
             else:
                 path = astar(self.labMap,self.beaconsList[i], self.beaconsList[i+1])
+            if path == None:
+                break
             path = [v for i, v in enumerate(path) if i % 2 == 0]
             for node in path[1:]:
                 myPath.append(node)
         print("myPath: "+str(myPath))
+        self.printPaths(self.labMap, myPath)
 
-        optimalPath = [(0,0)]
-        for i in range(0, len(self.beaconsList)-1):
+        optimalPath = [(28,14)]
+        for i in range(0, len(self.beaconsList)):
             if i == (len(self.beaconsList)-1):
-                path = astar(self.minpathMap,self.beaconsList[i], self.beaconsList[0])
+                path = astar(self.minpathMap, self.beaconsList[i], self.beaconsList[0])
             else:
-                path = astar(self.minpathMap,self.beaconsList[i], self.beaconsList[i+1])
+                path = astar(self.minpathMap, self.beaconsList[i], self.beaconsList[i+1])
             path = [v for i, v in enumerate(path) if i % 2 == 0]
             for node in path[1:]:
                 optimalPath.append(node)
         print("optimalPath: "+str(optimalPath))
+        self.printPaths(self.minpathMap, optimalPath)
 
         if len(myPath) == len(optimalPath):
             return myPath
@@ -338,13 +346,31 @@ class MyRob(CRobLinkAngs):
     def finishProgram(self,myPath):
         outMap = open(mapfile,"w")
         for node in myPath:
-            s = str(node[0]-28) + " " + str(node[1]-14) + "\n"
+            if node in self.beaconsList:
+                s = str(node[0]-28) + " " + str(node[1]-14) + " #"+str(self.beaconsList.index(node))+"\n"
+            else:
+                s = str(node[0]-28) + " " + str(node[1]-14) + "\n"
             outMap.write(s)
         outMap.close()
 
         print("finish()")
         self.finish()
         exit(-1)
+
+    def cleanXBetweenWalls(self):
+        #Eliminar todos os 'X' que estão entre as paredes
+        for x in range (1, 55, 2):
+            for y in range (1, 27, 2):
+                if self.minpathMap[y][x] == 'X' and (self.minpathMap[y][x+1] == '-' or self.minpathMap[y][x-1] == '-' or self.minpathMap[y+1][x] == '-' or self.minpathMap[y-1][x] == '-' or self.minpathMap[y][x+1] == '|' or self.minpathMap[y][x-1] == '|' or self.minpathMap[y+1][x] == '|' or self.minpathMap[y-1][x] == '|'):
+                    self.minpathMap[y][x] = ' ' 
+
+    def printPaths(self, maze, path):
+        pathinmaze = maze
+        for node in path:
+            pathinmaze[node[1]][node[0]] = "O"
+
+        for l in reversed(pathinmaze):
+            print(''.join([str(l) for l in l]))
         
 
     def run(self):
@@ -430,8 +456,8 @@ class MyRob(CRobLinkAngs):
 
 
         if action == "forward":
-            print("X: "+str(realX)+", Y: "+str(realY)+", dir: "+str(dir))
-            print("beacons: "+str(self.beaconsList))
+            #print("X: "+str(realX)+", Y: "+str(realY)+", dir: "+str(dir))
+            #print("beacons: "+str(self.beaconsList))
             if ((realX % 2 < 0.21 or realX % 2 > 1.79) and (realY % 2 < 0.31 or realY % 2 > 1.69)) or ((realX % 2 < 0.31 or realX % 2 > 1.69) and (realY % 2 < 0.21 or realY % 2 > 1.79)):
                 if not None in self.beaconsList:
                     foundBestPath = self.foundOptimalPath()
@@ -446,7 +472,8 @@ class MyRob(CRobLinkAngs):
 
                     rob.fillMap(intrealX, intrealY, 'X')
                     rob.fillWalls(intrealX, intrealY, dir, self.measures.irSensor[center_id], self.measures.irSensor[left_id], self.measures.irSensor[right_id])
-                    rob.printMap()
+                    self.cleanXBetweenWalls()
+                    #rob.printMap()
 
                     print("center: "+str(self.measures.irSensor[center_id])+", left: "+str(self.measures.irSensor[left_id])+", right: "+str(self.measures.irSensor[right_id]))
                     #Caso tenha parede a frente
