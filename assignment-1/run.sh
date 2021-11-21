@@ -34,16 +34,13 @@ shift $(($OPTIND-1))
 
 case $challenge in
     1)
-        # how to call agent for challenge 1
 	cd C1; java jClient -h "$host" -p "$pos" -r "$robname"
         ;;
     2)
-        # how to call agent for challenge 2
-	cd C2; python3 mainRob.py -h "$host" -p "$pos" -r "$robname" -f "$outfile" # assuming -f is the option for the map
+	cd C2; python3 mainRob.py -h "$host" -p "$pos" -r "$robname" -f "$outfile"
         ;;
     3)
-        # how to call agent for challenge 3
-        cd C3; python3 mainRob.py -h "$host" -p "$pos" -r "$robname" -f "$outfile" # assuming -f is the option for the path
+        cd C3; python3 mainRob.py -h "$host" -p "$pos" -r "$robname" -f "$outfile"
         ;;
 esac
 
