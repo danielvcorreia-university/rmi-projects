@@ -233,19 +233,8 @@ class MyRob(CRobLinkAngs):
                 if self.labMap[y][x] == 'X' and (self.labMap[y][x+1] == ' ' or self.labMap[y][x-1] == ' ' or self.labMap[y+1][x] == ' ' or self.labMap[y-1][x] == ' '):
                     saveCoords.append((x,y))
 
-        print("saveCoords: "+ str(saveCoords))
+        #print("saveCoords: "+ str(saveCoords))
         return saveCoords
-        #Encontrar o 'X' mais perto
-        # minRes = 1000
-        # closestX = None
-        # for coords in saveCoords:
-        #     res = abs(coords[0] - currX) + abs(coords[1] - currY)
-        #     if res < minRes:
-        #         minRes = res
-        #         closestX = coords
-
-        # print("closestX: "+ str(closestX))
-        # return closestX
                 
     def calcDirByCoords(self, currCoords, nextCoords):
         res = (nextCoords[0]-currCoords[0], nextCoords[1]-currCoords[1])
@@ -391,7 +380,7 @@ class MyRob(CRobLinkAngs):
         if action == "forward":
             #print("X: "+str(realX)+", Y: "+str(realY)+", dir: "+str(dir))
             if self.measures.collision:
-                print('Turn around')
+                #print('Turn around')
                 self.driveMotors(0.0,-0.0)
                 return ["turningRight", self.calcTurnAroundDir(dir), [(intrealX,intrealY)]]
 
@@ -401,44 +390,28 @@ class MyRob(CRobLinkAngs):
                     #Escrever 'X' no local e escrever as paredes a volta
                     rob.fillMap(intrealX, intrealY, 'X')
                     rob.fillWalls(intrealX, intrealY, dir, self.measures.irSensor[center_id], self.measures.irSensor[left_id], self.measures.irSensor[right_id])
-                    rob.printMap()
+                    #rob.printMap()
 
-                    print("center: "+str(self.measures.irSensor[center_id])+", left: "+str(self.measures.irSensor[left_id])+", right: "+str(self.measures.irSensor[right_id]))
+                    #print("center: "+str(self.measures.irSensor[center_id])+", left: "+str(self.measures.irSensor[left_id])+", right: "+str(self.measures.irSensor[right_id]))
                     #Caso tenha parede a frente
                     if self.measures.irSensor[center_id] >= 1:
                         #Vira 180 graus caso tenha parede a esquerda E parede a direita
                         if self.measures.irSensor[right_id] >= 1.2 and  self.measures.irSensor[left_id] >= 1.2:
-                            print('Turn around')
+                            #print('Turn around')
                             self.driveMotors(0.0,0.0)
                             return ["turningRight", self.calcTurnAroundDir(dir), path]
                         else:
-                            #Vira a esquerda caso nao tenha parede a esquerda
-                            #if self.measures.irSensor[right_id] >= self.measures.irSensor[left_id]:
-                            # if self.measures.irSensor[left_id] <= 1.0:
-                            #     print('Rotate left')
-                            #     self.driveMotors(0.0,0.0)
-                            #     return ["turningLeft", self.calcTurnLeftDir(dir), path]
-                            # #Vira a direita
-                            # else :
-                            #     print('Rotate Right')
-                            #     self.driveMotors(0.0,0.0)
-                            #     return ["turningRight", self.calcTurnRightDir(dir), path]
+                            #Vira a direita caso nao tenha parede a direita
                             if self.measures.irSensor[right_id] <= 1.1:
-                                print('Rotate Right')
+                                #print('Rotate Right')
                                 self.driveMotors(0.0,0.0)
                                 return ["turningRight", self.calcTurnRightDir(dir), path]
-                            #Vira a direita
+                            #Vira a esquerda
                             else :
-                                print('Rotate left')
+                                #print('Rotate left')
                                 self.driveMotors(0.0,0.0)
                                 return ["turningLeft", self.calcTurnLeftDir(dir), path]
                                 
-
-                    #Caso não tenha parede a frente, escolhe virar a esquerda quando pode
-                    # if self.measures.irSensor[left_id] < 1.5:
-                    #    print('Rotate left')
-                    #    self.driveMotors(0.0,0.0)
-                    #    return ["turningLeft", self.calcTurnLeftDir(dir), path]
 
                     #Segue em frente
                     self.driveMotors(leftWheel,rightWheel)
@@ -451,7 +424,7 @@ class MyRob(CRobLinkAngs):
                     #Já chegou ao 'X' destino ou deu astar para si mesmo
                     if len(newpath) == 1: 
                         rob.fillWalls(intrealX, intrealY, dir, self.measures.irSensor[center_id], self.measures.irSensor[left_id], self.measures.irSensor[right_id])
-                        rob.printMap()
+                        #rob.printMap()
                         #Verificar se precisa de rodar para apontar para a célula ' '
                         dirs = [-90, 90, 180, 0]
                         index = 0
@@ -468,7 +441,7 @@ class MyRob(CRobLinkAngs):
                             index += 1
 
                         minpath = self.getAstarPath(intrealX, intrealY)
-                        print(minpath)
+                        #print(minpath)
 
                         self.driveMotors(0.15,0.15)
                         return ["forward", None, minpath]
@@ -476,7 +449,7 @@ class MyRob(CRobLinkAngs):
                     elif (intrealX, intrealY) == path[1] and len(path) >= 2:
                         #Já chegou ao 'X' seguinte
                         newpath = path[1:]
-                        print("newpath: " + str(newpath))
+                        #print("newpath: " + str(newpath))
                         #Verifica se precisa de virar para ficar de frente para a próxima célula no path
                         dirToRotate = self.calcDirByCoords(path[0], path[1])
 
@@ -508,15 +481,15 @@ class MyRob(CRobLinkAngs):
                 #  tenho de ver os 'X' que ainda têm quadrados adjacentes por descobrir e aplicar a*
                 elif self.checkIfFrontOld(intrealX, intrealY, dir):
                     self.fillIntermediateX(intrealX,intrealY, dir)
-                    rob.printMap()
+                    #rob.printMap()
 
                     minpath = self.getAstarPath(intrealX, intrealY)
-                    print(minpath)
+                    #print(minpath)
 
                     #Edge case: a* para si mesmo, por ter detetado old path a frente mas ter um ' ' adjacente
                     if len(minpath) == 1:
                         rob.fillWalls(intrealX, intrealY, dir, self.measures.irSensor[center_id], self.measures.irSensor[left_id], self.measures.irSensor[right_id])
-                        rob.printMap()
+                        #rob.printMap()
                         #Verificar se precisa de rodar para apontar para a célula ' '
                         dirs = [-90, 90, 180, 0]
                         index = 0
@@ -562,26 +535,26 @@ class MyRob(CRobLinkAngs):
             if value % 2 == 0:
                 if closestDir == 180:
                     if dir > 0:
-                        print("adjustLeft dir: "+str(dir)+", closest "+str(closestDir)+", diffY "+str(diffY))
+                        #print("adjustLeft dir: "+str(dir)+", closest "+str(closestDir)+", diffY "+str(diffY))
                         leftWheel = -0.01
                         rightWheel = 0.01
                         self.driveMotors(leftWheel,rightWheel)
                         return [action, value-1, path]
                     elif dir < 0:
-                        print("adjustRight dir: "+str(dir)+", closest "+str(closestDir)+", diffY "+str(diffY))
+                        #print("adjustRight dir: "+str(dir)+", closest "+str(closestDir)+", diffY "+str(diffY))
                         leftWheel = 0.01
                         rightWheel = -0.01
                         self.driveMotors(leftWheel,rightWheel)
                         return [action, value-1, path]
                 else:
                     if dir < (closestDir+diffY):
-                        print("adjustLeft dir: "+str(dir)+", closest "+str(closestDir)+", diffY "+str(diffY))
+                        #print("adjustLeft dir: "+str(dir)+", closest "+str(closestDir)+", diffY "+str(diffY))
                         leftWheel = -0.01
                         rightWheel = 0.01
                         self.driveMotors(leftWheel,rightWheel)
                         return [action, value-1, path]
                     elif dir > (closestDir+diffY):
-                        print("adjustRight dir: "+str(dir)+", closest "+str(closestDir)+", diffY "+str(diffY))
+                        #print("adjustRight dir: "+str(dir)+", closest "+str(closestDir)+", diffY "+str(diffY))
                         leftWheel = 0.01
                         rightWheel = -0.01
                         self.driveMotors(leftWheel,rightWheel)
@@ -593,7 +566,7 @@ class MyRob(CRobLinkAngs):
         elif action == "turningLeft":
             if self.checkCorrectDir(dir,value) == False:
                 if dir % 15 == 0:
-                    print("turnLeft dir: "+str(dir)+" to "+str(value))
+                    #print("turnLeft dir: "+str(dir)+" to "+str(value))
                 leftWheel = -0.08
                 rightWheel = 0.08
                 self.driveMotors(leftWheel,rightWheel)
@@ -606,7 +579,7 @@ class MyRob(CRobLinkAngs):
         elif action == "turningRight":
             if self.checkCorrectDir(dir,value) == False:
                 if dir % 15 == 0:
-                    print("turnRight dir: "+str(dir)+" to "+str(value))
+                    #print("turnRight dir: "+str(dir)+" to "+str(value))
                 leftWheel = 0.08
                 rightWheel = -0.08
                 self.driveMotors(leftWheel,rightWheel)
