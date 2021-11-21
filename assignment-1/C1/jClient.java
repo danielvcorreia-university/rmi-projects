@@ -259,9 +259,7 @@ public class jClient {
             rPow = lin - (w_l / 2.0f);
         }
 
-        //System.out.printf("Value of left wheel: %f Value of right wheel: %f \n", lPow, rPow);
         cif.DriveMotors(lPow,rPow);
-
         return;
     }
 
@@ -356,7 +354,6 @@ public class jClient {
     // //control variables
     private float lPow;
     private float rPow;
-
     private boolean dir;
 
     private State state;
