@@ -38,9 +38,11 @@ case $challenge in
         ;;
     2)
 	cd C2; python3 mainRob.py -h "$host" -p "$pos" -r "$robname" -f "$outfile"
+	mv "$outfile" ../"$outfile"
         ;;
     3)
         cd C3; python3 mainRob.py -h "$host" -p "$pos" -r "$robname" -f "$outfile"
+	mv "$outfile" ../"$outfile"
         ;;
 esac
 
