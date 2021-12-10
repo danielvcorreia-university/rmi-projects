@@ -5,8 +5,9 @@ host="localhost"
 robname="theAgent"
 pos="0"
 outfile="mapping.out"
+map="map.out"
 
-while getopts "c:h:r:p:f:" op
+while getopts "c:h:r:p:f:m:" op
 do
     case $op in
         "c")
@@ -24,6 +25,9 @@ do
         "f")
             outfile=$OPTARG
             ;;
+	"m")
+	    map=$OPTARG
+	    ;;
         default)
             echo "ERROR in parameters"
             ;;
@@ -44,5 +48,9 @@ case $challenge in
         cd C3; python3 mainRob.py -h "$host" -p "$pos" -r "$robname" -f "$outfile"
 	mv "$outfile" ../"$outfile"
         ;;
+    4)
+	cd C4; python3 mainRob.py -h "$host" -p "$pos" -r "$robname" -f "$outfile" -m "$map"
+	mv "$outfile" ../"$outfile"
+	;;
 esac
 
