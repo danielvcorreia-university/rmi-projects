@@ -299,31 +299,75 @@ class MyRob(CRobLinkAngs):
         minpath = [v for i, v in enumerate(minpath) if i % 2 == 0]
         return minpath
 
-    def foundOptimalPath(self):
-        myPath = [(28,14)]
-        for i in range(0, len(self.beaconsList)):
-            path = None
-            if i == (len(self.beaconsList)-1):
-                path = astar(self.labMap,self.beaconsList[i], self.beaconsList[0])
-            else:
-                path = astar(self.labMap,self.beaconsList[i], self.beaconsList[i+1])
-            if path == None:
-                break
-            path = [v for i, v in enumerate(path) if i % 2 == 0]
-            for node in path[1:]:
-                myPath.append(node)
-        #print("myPath: "+str(myPath))
+    # Python function to print permutations of a given list
+    def permutation(self, lst):
 
-        optimalPath = [(28,14)]
-        for i in range(0, len(self.beaconsList)):
-            if i == (len(self.beaconsList)-1):
-                path = astar(self.minpathMap, self.beaconsList[i], self.beaconsList[0])
-            else:
-                path = astar(self.minpathMap, self.beaconsList[i], self.beaconsList[i+1])
-            path = [v for i, v in enumerate(path) if i % 2 == 0]
-            for node in path[1:]:
-                optimalPath.append(node)
-        #print("optimalPath: "+str(optimalPath))
+        # If lst is empty then there are no permutations
+        if len(lst) == 0:
+            return []
+
+        # If there is only one element in lst then, only
+        # one permutation is possible
+        if len(lst) == 1:
+            return [lst]
+
+        # Find the permutations for lst if there are
+        # more than 1 characters
+
+        l = [] # empty list that will store current permutation
+
+        # Iterate the input(lst) and calculate the permutation
+        for i in range(len(lst)):
+            m = lst[i]
+
+            # Extract lst[i] or m from the list.  remLst is
+            # remaining list
+            remLst = lst[:i] + lst[i+1:]
+
+            # Generating all permutations where m is first
+            # element
+            for p in self.permutation(remLst):
+                l.append([m] + p)
+        return l
+
+    def foundOptimalPath(self):
+        myPath = None
+        for index, perm in enumerate(self.permutation(self.beaconsList[1:])):
+            minPath = [(28,14)]
+            for i in range(0, len(perm)+1):
+                path = None
+                if i == 0:
+                    path = astar(self.labMap,self.beaconsList[0], perm[i])
+                elif i == len(perm):
+                    path = astar(self.labMap, perm[i-1], self.beaconsList[0])
+                else:
+                    path = astar(self.labMap, perm[i-1], perm[i])
+                if path == None:
+                    break
+
+                path = [v for i, v in enumerate(path) if i % 2 == 0]
+                for node in path[1:]:
+                    minPath.append(node)
+            if index == 0 or len(minPath) < len(myPath):
+                myPath = minPath
+        print("myPath: "+str(myPath))
+
+        optimalPath = None
+        for index, perm in enumerate(self.permutation(self.beaconsList[1:])):
+            minOptimalPath = [(28,14)]
+            for i in range(0, len(perm)+1):
+                if i == 0:
+                    path = astar(self.minpathMap,self.beaconsList[0], perm[i])
+                elif i == len(perm):
+                    path = astar(self.minpathMap, perm[i-1], self.beaconsList[0])
+                else:
+                    path = astar(self.minpathMap, perm[i-1], perm[i])
+                path = [v for i, v in enumerate(path) if i % 2 == 0]
+                for node in path[1:]:
+                    minOptimalPath.append(node)
+            if index == 0 or len(minOptimalPath) < len(optimalPath):
+                optimalPath = minOptimalPath
+        print("optimalPath: "+str(optimalPath))
 
         if len(myPath) == len(optimalPath):
             return [True, myPath]
@@ -487,7 +531,7 @@ class MyRob(CRobLinkAngs):
                     rob.fillMap(intrealX, intrealY, 'X')
                     rob.fillWalls(intrealX, intrealY, dir, self.measures.irSensor[center_id], self.measures.irSensor[left_id], self.measures.irSensor[right_id])
                     self.cleanXBetweenWalls()
-                    #rob.printMap()
+                    rob.printMap()
 
                     #print("center: "+str(self.measures.irSensor[center_id])+", left: "+str(self.measures.irSensor[left_id])+", right: "+str(self.measures.irSensor[right_id]))
                     #Caso tenha parede a frente
@@ -748,8 +792,8 @@ if __name__ == '__main__':
     labMap = [[' '] * (CELLCOLS*4) for i in range(CELLROWS*4) ]         # 56 a 28
     minpathMap = [['X'] * (CELLCOLS*4) for i in range(CELLROWS*4) ]         # 56 a 28
     rob.setMap(labMap, minpathMap)
-    # if mapc != None:
-        # rob.setMap(mapc.labMap, minpathMap)
-        # rob.printMap()
+    if mapc != None:
+        rob.setMap(mapc.labMap, minpathMap)
+        rob.printMap()
     
     rob.run()
