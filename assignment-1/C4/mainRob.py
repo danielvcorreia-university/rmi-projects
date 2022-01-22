@@ -118,7 +118,11 @@ class MyRob(CRobLinkAngs):
 
     def printMap(self, outMap=None):
         for l in reversed(self.labMap):
-            print(''.join([str(l) for l in l]), file=outMap)
+            #print(''.join([str(l) for l in l]), file=outMap)
+            line = ''
+            for i in range(1, len(l)):
+            	line += l[i]
+            print(''.join([line]), file=outMap)
 
     def fillMap(self, x, y, symbol):
         self.labMap[y][x] = symbol
@@ -946,8 +950,8 @@ for i in range(1, len(sys.argv),2):
 
 if __name__ == '__main__':
     rob=MyRob(rob_name,pos,[0.0,90.0,-90.0,180.0],host)
-    labMap = [[' '] * (CELLCOLS*4-1) for i in range(CELLROWS*4) ]         # 55 a 28
-    minpathMap = [['X'] * (CELLCOLS*4-1) for i in range(CELLROWS*4) ]         # 55 a 28
+    labMap = [[' '] * (CELLCOLS*4) for i in range(CELLROWS*4) ]         # 56 a 28
+    minpathMap = [['X'] * (CELLCOLS*4) for i in range(CELLROWS*4) ]         # 56 a 28
     rob.setMap(labMap, minpathMap)
     if mapc != None:
         rob.setMap(mapc.labMap, minpathMap)
