@@ -115,18 +115,13 @@ class MyRob(CRobLinkAngs):
     # to know if there is a wall on top of cell(i,j) (i in 0..5), check if the value of labMap[i*2+1][j*2] is space or not
     def setMap(self, labMap, minpathMap):
         self.labMap = labMap
-        #self.minpathMap = minpathMap
 
     def printMap(self, outMap=None):
         for l in reversed(self.labMap):
             print(''.join([str(l) for l in l]), file=outMap)
-        #print("----------------------------")
-        #for l in reversed(self.minpathMap):
-        #    print(''.join([str(l) for l in l]))
 
     def fillMap(self, x, y, symbol):
         self.labMap[y][x] = symbol
-        #self.minpathMap[y][x] = symbol
 
     def calcTurnLeftDir(self, dir):
         if dir > -20 and dir < 20:
@@ -316,29 +311,22 @@ class MyRob(CRobLinkAngs):
 
     # Python function to print permutations of a given list
     def permutation(self, lst):
-
         # If lst is empty then there are no permutations
         if len(lst) == 0:
             return []
-
         # If there is only one element in lst then, only
         # one permutation is possible
         if len(lst) == 1:
             return [lst]
-
         # Find the permutations for lst if there are
         # more than 1 characters
-
         l = [] # empty list that will store current permutation
-
         # Iterate the input(lst) and calculate the permutation
         for i in range(len(lst)):
             m = lst[i]
-
             # Extract lst[i] or m from the list.  remLst is
             # remaining list
             remLst = lst[:i] + lst[i+1:]
-
             # Generating all permutations where m is first
             # element
             for p in self.permutation(remLst):
@@ -368,29 +356,6 @@ class MyRob(CRobLinkAngs):
         print("myPath: "+str(myPath))
         return [True, myPath]
 
-        # optimalPath = None
-        # for index, perm in enumerate(self.permutation(self.beaconsList[1:])):
-        #     minOptimalPath = [(28,14)]
-        #     for i in range(0, len(perm)+1):
-        #         if i == 0:
-        #             path = astar(self.minpathMap,self.beaconsList[0], perm[i])
-        #         elif i == len(perm):
-        #             path = astar(self.minpathMap, perm[i-1], self.beaconsList[0])
-        #         else:
-        #             path = astar(self.minpathMap, perm[i-1], perm[i])
-        #         path = [v for i, v in enumerate(path) if i % 2 == 0]
-        #         for node in path[1:]:
-        #             minOptimalPath.append(node)
-        #     if index == 0 or len(minOptimalPath) < len(optimalPath):
-        #         optimalPath = minOptimalPath
-        # print("optimalPath: "+str(optimalPath))
-
-        # if len(myPath) == len(optimalPath):
-        #     return [True, myPath]
-        
-        # return [False, optimalPath]
-        
-
     def finishProgram(self,myPath):
         #Path file
         outMap = open(pathfile,"w")
@@ -413,31 +378,6 @@ class MyRob(CRobLinkAngs):
         print("finish()")
         self.finish()
         exit(-1)
-
-    # def cleanXBetweenWalls(self):
-    #     #Eliminar todos os 'X' que estão entre as paredes
-    #     for x in range (1, 55, 2):
-    #         for y in range (1, 27, 2):
-    #             if self.minpathMap[y][x] == 'X' and (self.minpathMap[y][x+1] == '-' or self.minpathMap[y][x-1] == '-' or self.minpathMap[y+1][x] == '-' or self.minpathMap[y-1][x] == '-' or self.minpathMap[y][x+1] == '|' or self.minpathMap[y][x-1] == '|' or self.minpathMap[y+1][x] == '|' or self.minpathMap[y-1][x] == '|'):
-    #                 self.minpathMap[y][x] = ' ' 
-
-    # def getUnopenedFromOptimalPath(self, optimalPath, intrealX, intrealY):
-    #     unopenedList = []
-    #     for node in optimalPath:
-    #         if self.labMap[node[1]][node[0]] == 'X' and (self.labMap[node[1]+1][node[0]] == ' ' or self.labMap[node[1]-1][node[0]] == ' ' or self.labMap[node[1]][node[0]+1] == ' ' or self.labMap[node[1]][node[0]-1] == ' '):
-    #             unopenedList.append(node)
-
-    #     #print("unopenedList: "+str(unopenedList))
-    #     #Calcular o caminho mais curto para um 'X' através de a*
-    #     minpath = None
-    #     for i, unopenedX in enumerate(unopenedList):
-    #         newpath = astar(self.labMap,(intrealX,intrealY), unopenedX)
-    #         if i == 0: minpath = newpath
-    #         if len(newpath) < len(minpath): minpath = newpath
-
-    #     minpath = [v for i, v in enumerate(minpath) if i % 2 == 0]
-    #     #print("minpath para unopenedX: "+str(minpath))
-    #     return minpath
 
     def simulateNextCoords(self, inleft, inright):
         self.outleft = (inleft + self.outleft) / 2    # N(1,o^2)
@@ -545,23 +485,6 @@ class MyRob(CRobLinkAngs):
 
             #if ((self.x % 2 < 0.21 or self.x % 2 > 1.79) and (self.y % 2 < 0.31 or self.y % 2 > 1.69)) or ((self.x % 2 < 0.31 or self.x % 2 > 1.69) and (self.y % 2 < 0.21 or self.y % 2 > 1.79)):
             if ((self.x % 2 <= 0.3 or self.x % 2 >= 1.7) and (self.y % 2 <= 0.3 or self.y % 2 >= 1.7)):   
-                # Caso já tenha encontrado todos os beacons e ainda/já não esteja a descobrir mais caminhos
-                # if (not None in self.beaconsList) and path == None and value == None:
-                #     self.simulateNextCoords(0.0,0.0)
-                #     self.driveMotors(0.0,0.0)
-
-                #     foundBestPath = self.foundOptimalPath()
-
-                #     #Caso o meu path já seja o melhor possivel, vai escrever e acabar o programa
-                #     if foundBestPath[0] != False: 
-                #         self.finishProgram(foundBestPath[1])
-                    
-                #     #Caso o meu path ainda não seja o melhor, vou ver quais células que estão no melhor path
-                #     #ainda são 'X's com um ' ' adjacente no meu mapa, indo para o mais próximo
-                #     minpath = self.getUnopenedFromOptimalPath(foundBestPath[1], intrealX, intrealY)
-                #     return ["forward", 1, minpath]
-
-                
                 #Caso seja um sitio novo
                 if labMap[intrealY][intrealX] == ' ':
                     #Escrever 'X' no local e escrever as paredes a volta
@@ -735,17 +658,6 @@ class MyRob(CRobLinkAngs):
 
             #Não está no centro de nenhuma célula, continua em frente
             else:
-                # if closestDir == 180 : diffY = 0
-                # if closestDir == 0 :
-                #     res = dir - diffY
-                # else:
-                #     res = abs(dir) - abs(closestDir) - diffY
-                # #Caso, devido ao erro dos motores, haja um desvio significativo na orientação, paramos para ajustar de novo
-                # if abs(res) >= 4:
-                #     self.simulateNextCoords(0.0,0.0)
-                #     self.driveMotors(0.0,0.0)
-                #     return ["ad
-                # just", 8, path]
                 if self.measures.irSensor[center_id] >= 0.7:
                     leftWheel = 0.12
                     rightWheel = 0.12
