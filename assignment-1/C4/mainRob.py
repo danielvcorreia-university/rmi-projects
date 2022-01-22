@@ -946,8 +946,8 @@ for i in range(1, len(sys.argv),2):
 
 if __name__ == '__main__':
     rob=MyRob(rob_name,pos,[0.0,90.0,-90.0,180.0],host)
-    labMap = [[' '] * (CELLCOLS*4) for i in range(CELLROWS*4) ]         # 56 a 28
-    minpathMap = [['X'] * (CELLCOLS*4) for i in range(CELLROWS*4) ]         # 56 a 28
+    labMap = [[' '] * (CELLCOLS*4+1) for i in range(CELLROWS*4) ]         # 55 a 28
+    minpathMap = [['X'] * (CELLCOLS*4+1) for i in range(CELLROWS*4) ]         # 55 a 28
     rob.setMap(labMap, minpathMap)
     if mapc != None:
         rob.setMap(mapc.labMap, minpathMap)
