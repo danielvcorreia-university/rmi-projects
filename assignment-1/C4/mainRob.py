@@ -165,35 +165,35 @@ class MyRob(CRobLinkAngs):
 
     def fillWalls(self, x, y, dir, center, left, right):
         if dir > -20 and dir < 20:
-            if center >= 1.1 and self.labMap[y][x+1] != 'X':
+            if center >= 1.4 and self.labMap[y][x+1] != 'X':
                 self.fillMap(x+1,y,'|')
-            if left >= 1.2 and self.labMap[y+1][x] != 'X':
+            if left >= 1.6 and self.labMap[y+1][x] != 'X':
                 self.fillMap(x,y+1,'-')
-            if right >= 1.2 and self.labMap[y-1][x] != 'X':
+            if right >= 1.6 and self.labMap[y-1][x] != 'X':
                 self.fillMap(x,y-1,'-')
 
         elif dir > 70 and dir < 110:
-            if center >= 1.1 and self.labMap[y+1][x] != 'X':
+            if center >= 1.4 and self.labMap[y+1][x] != 'X':
                 self.fillMap(x,y+1,'-')
-            if left >= 1.2 and self.labMap[y][x-1] != 'X':
+            if left >= 1.6 and self.labMap[y][x-1] != 'X':
                 self.fillMap(x-1,y,'|')
-            if right >= 1.2 and self.labMap[y][x+1] != 'X':
+            if right >= 1.6 and self.labMap[y][x+1] != 'X':
                 self.fillMap(x+1,y,'|')
 
         elif dir > 160 or dir < -160:
-            if center >= 1.1 and self.labMap[y][x-1] != 'X':
+            if center >= 1.4 and self.labMap[y][x-1] != 'X':
                 self.fillMap(x-1,y,'|')
-            if left >= 1.2 and self.labMap[y-1][x] != 'X':
+            if left >= 1.6 and self.labMap[y-1][x] != 'X':
                 self.fillMap(x,y-1,'-')
-            if right >= 1.2 and self.labMap[y+1][x] != 'X':
+            if right >= 1.6 and self.labMap[y+1][x] != 'X':
                 self.fillMap(x,y+1,'-')
 
         else: #if dir > -110 and dir < -70:
-            if center >= 1.1 and self.labMap[y-1][x] != 'X':
+            if center >= 1.4 and self.labMap[y-1][x] != 'X':
                 self.fillMap(x,y-1,'-')
-            if left >= 1.2 and self.labMap[y][x+1] != 'X':
+            if left >= 1.6 and self.labMap[y][x+1] != 'X':
                 self.fillMap(x+1,y,'|')
-            if right >= 1.2 and self.labMap[y][x-1] != 'X':
+            if right >= 1.6 and self.labMap[y][x-1] != 'X':
                 self.fillMap(x-1,y,'|')
 
     def checkIfFrontOld(self, x, y, dir):
@@ -270,18 +270,30 @@ class MyRob(CRobLinkAngs):
             return True
         else: 
             return False
+    
+    def checkCorrectDirAstar(self, dir, dirToRotate):
+        if dir > -45 and dir < 45 and dirToRotate == 0:
+            return True
+        elif dir > 45 and dir < 135 and dirToRotate == 90:
+            return True
+        elif (dir > 135 or dir < -135) and dirToRotate == 180:
+            return True
+        elif dir > -135 and dir < -45 and dirToRotate == -90:
+            return True
+        else: 
+            return False
 
     def checkTurnLeft(self, dir, dirToRotate):
-        if dir > -20 and dir < 20:
+        if dir > -45 and dir < 45:
             if dirToRotate == 90:
                 return True
-        elif dir > 70 and dir < 110:
+        elif dir > 45 and dir < 135:
             if dirToRotate == 180:
                 return True
-        elif (dir > 160 or dir < -160):
+        elif (dir > 135 or dir < -135):
             if dirToRotate == -90:
                 return True
-        elif dir > -110 and dir < -70:
+        elif dir > -135 and dir < -45:
             if dirToRotate == 0:
                 return True
         return False
@@ -290,8 +302,10 @@ class MyRob(CRobLinkAngs):
         #Coordenadas de 'X' que ainda têm um ' ' adjacente
         saveCoords = self.getUnopenedX()
         if saveCoords == []:
-            myPath = self.foundOptimalPath()
-            self.finishProgram(myPath[1])
+            self.finished = True
+            minpath = astar(self.labMap,(intrealX,intrealY), self.beaconsList[0])
+            minpath = [v for i, v in enumerate(minpath) if i % 2 == 0]
+            return minpath
             
 
         #Calcular o caminho mais curto para um 'X' através de a*
@@ -357,6 +371,14 @@ class MyRob(CRobLinkAngs):
         return [True, myPath]
 
     def finishProgram(self,myPath):
+        #Map file
+        for beacon in self.beaconsList:
+            self.fillMap(beacon[0],beacon[1],str(self.beaconsList.index(beacon)))
+        self.printMap()
+        outMap = open(mapfile,"w")
+        self.printMap(outMap)
+        outMap.close()
+
         #Path file
         outMap = open(pathfile,"w")
         for node in myPath:
@@ -365,14 +387,6 @@ class MyRob(CRobLinkAngs):
             else:
                 s = str(node[0]-28) + " " + str(node[1]-14) + "\n"
             outMap.write(s)
-        outMap.close()
-
-        #Map file
-        for beacon in self.beaconsList:
-            self.fillMap(beacon[0],beacon[1],str(self.beaconsList.index(beacon)))
-        self.printMap()
-        outMap = open(mapfile,"w")
-        self.printMap(outMap)
         outMap.close()
 
         print("finish()")
@@ -398,6 +412,7 @@ class MyRob(CRobLinkAngs):
         action = "forward"
         value = None
         path = None
+        self.finished = False
 
         #for testing
         first = True
@@ -429,7 +444,7 @@ class MyRob(CRobLinkAngs):
                 if self.measures.visitingLed==True:
                     state='wait'
                 if self.measures.ground==0:
-                    self.setVisitingLed(True);
+                    self.setVisitingLed(True)
                 [action, value, path] = self.wander(action, value, path)
             elif state=='wait':
                 self.setReturningLed(True)
@@ -447,9 +462,9 @@ class MyRob(CRobLinkAngs):
             
 
     def wander(self, action, value, path):
-        print("real: ("+str(self.measures.x - self.initialX + 28)+","+str(self.measures.y - self.initialY + 14) + ") vs sim: (" + str(self.x) + "," + str(self.y) + ")\n")
+        #print("real: ("+str(self.measures.x - self.initialX + 28)+","+str(self.measures.y - self.initialY + 14) + ") vs sim: (" + str(self.x) + "," + str(self.y) + ")\n")
         #print("sim: (" + str(self.x) + "," + str(self.y) + ")\n")
-        print("front sensor: " + str(self.measures.irSensor[0]))
+        #print("front: " + str(self.measures.irSensor[0]) + ", left: "+ str(self.measures.irSensor[1]) + ", right: "+str(self.measures.irSensor[2]))
         
         intrealX = int(self.x)
         intrealY = int(self.y)
@@ -478,8 +493,8 @@ class MyRob(CRobLinkAngs):
             #print("beacons: "+str(self.beaconsList))
             if self.measures.collision:
                 #print('Turn around')
-                self.simulateNextCoords(0.0,0.0)
-                self.driveMotors(0.0,0.0)
+                self.simulateNextCoords(0.1,-0.1)
+                self.driveMotors(0.1,-0.1)
                 return ["turningRight", self.calcTurnAroundDir(dir), [(intrealX,intrealY)]]
 
 
@@ -497,9 +512,32 @@ class MyRob(CRobLinkAngs):
                     #self.cleanXBetweenWalls()
                     rob.printMap()
 
+                    # CORRIGIR COORDENADAS COM SENSORES LATERAIS
+                    if self.measures.irSensor[left_id] >= 2.5:
+                        number = 1 / self.measures.irSensor[left_id] 
+                        if closestDir == 0:
+                            self.y = intrealY - (number - 0.4)
+                        elif closestDir == 90:
+                            self.x = intrealX + (number - 0.4)
+                        elif closestDir == -90:
+                            self.x = intrealX - (number - 0.4)
+                        else: #180
+                            self.y = intrealY + (number - 0.4)
+
+                    elif self.measures.irSensor[right_id] >= 2.5:
+                        number = 1 / self.measures.irSensor[right_id] 
+                        if closestDir == 0:
+                            self.y = intrealY + (number - 0.4)
+                        elif closestDir == 90:
+                            self.x = intrealX - (number - 0.4)
+                        elif closestDir == -90:
+                            self.x = intrealX + (number - 0.4)
+                        else: #180
+                            self.y = intrealY - (number - 0.4)
+
                     #print("center: "+str(self.measures.irSensor[center_id])+", left: "+str(self.measures.irSensor[left_id])+", right: "+str(self.measures.irSensor[right_id]))
                     #Caso tenha parede a frente
-                    if self.measures.irSensor[center_id] >= 1.2:
+                    if self.measures.irSensor[center_id] >= 1.4:
 
                         print(self.measures.irSensor[center_id])
                         # CORRIGIR COORDENADAS COM SENSOR FRONTAL
@@ -514,32 +552,32 @@ class MyRob(CRobLinkAngs):
                             self.x = intrealX + (number - 0.4)
 
                         #Vira 180 graus caso tenha parede a esquerda E parede a direita
-                        if self.measures.irSensor[right_id] >= 1.2 and  self.measures.irSensor[left_id] >= 1.2:
+                        if self.measures.irSensor[right_id] >= 1.3 and  self.measures.irSensor[left_id] >= 1.3:
                             #print('Turn around')
-                            self.simulateNextCoords(0.0,0.0)
-                            self.driveMotors(0.0,0.0)
+                            self.simulateNextCoords(0.1,-0.1)
+                            self.driveMotors(0.1,-0.1)
                             return ["turningRight", self.calcTurnAroundDir(dir), path]
                         else:
-                            #Vira a esquerda caso nao tenha parede a esquerda
-                            #if self.measures.irSensor[right_id] >= self.measures.irSensor[left_id]:
+                            #Vira a direita caso nao tenha parede a direita
                             if self.measures.irSensor[right_id] <= 1.1:
                                 #print('Rotate Right')
-                                self.simulateNextCoords(0.0,0.0)
-                                self.driveMotors(0.0,0.0)
+                                self.simulateNextCoords(0.1,-0.1)
+                                self.driveMotors(0.1,-0.1)
                                 return ["turningRight", self.calcTurnRightDir(dir), path]
-                            #Vira a direita
+                            #Vira a esquerda
                             else :
                                 #print('Rotate left')
-                                self.simulateNextCoords(0.0,0.0)
-                                self.driveMotors(0.0,0.0)
+                                self.simulateNextCoords(-0.1,0.1)
+                                self.driveMotors(-0.1,0.1)
                                 return ["turningLeft", self.calcTurnLeftDir(dir), path]
                                 
 
                     #Caso não tenha parede a frente, escolhe virar a direita quando pode
-                    # if self.measures.irSensor[right_id] <= 1.1:
-                    #     print('Rotate Right')
-                    #     self.driveMotors(0.0,0.0)
-                    #     return ["turningRight", self.calcTurnRightDir(dir), path]
+                    if self.measures.irSensor[right_id] <= 1.3:
+                        #print('Rotate Right')
+                        self.simulateNextCoords(0.1,-0.1)
+                        self.driveMotors(0.1,-0.1)
+                        return ["turningRight", self.calcTurnRightDir(dir), path]
 
                     #Segue em frente
                     # self.simulateNextCoords(leftWheel,rightWheel)
@@ -547,14 +585,22 @@ class MyRob(CRobLinkAngs):
                     # return ["forward", None, path]
                     self.simulateNextCoords(leftWheel,rightWheel)
                     self.driveMotors(leftWheel,rightWheel)
-                    return ["adjust", 8, path]
+                    return ["adjust", 2, path]
 
                 #Caso esteja a seguir um path do a*
                 elif path != None:
+                    print("@@@")
                     newpath = path
+                    if self.measures.irSensor[center_id] >= 0.9:
+                        leftWheel = 0.1
+                        rightWheel = 0.1
 
                     #Já chegou ao 'X' destino ou deu astar para si mesmo
                     if len(newpath) == 1: 
+                        if self.finished == True and newpath[0] == self.beaconsList[0]:
+                            myPath = self.foundOptimalPath()
+                            self.finishProgram(myPath[1])
+
                         rob.fillWalls(intrealX, intrealY, dir, self.measures.irSensor[center_id], self.measures.irSensor[left_id], self.measures.irSensor[right_id])
                         #rob.printMap()
                         #Verificar se precisa de rodar para apontar para a célula ' '
@@ -562,40 +608,40 @@ class MyRob(CRobLinkAngs):
                         index = 0
                         for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
                             if self.labMap[intrealY+new_position[1]][intrealX+new_position[0]] == ' ':
-                                if self.checkCorrectDir(dir,dirs[index]) == False:
+                                if self.checkCorrectDirAstar(dir,dirs[index]) == False:
                                     if self.checkTurnLeft(dir, dirs[index]):
-                                        self.simulateNextCoords(0.0,0.0)
-                                        self.driveMotors(0.0,0.0)
+                                        self.simulateNextCoords(-0.1,0.1)
+                                        self.driveMotors(-0.1,0.1)
                                         return ["turningLeft", dirs[index], None]
-                                    self.simulateNextCoords(0.0,0.0)
-                                    self.driveMotors(0.0,0.0)
+                                    self.simulateNextCoords(0.1,-0.1)
+                                    self.driveMotors(0.1,-0.1)
                                     return ["turningRight", dirs[index], None]
-                                self.simulateNextCoords(0.15,0.15)
-                                self.driveMotors(0.15,0.15)
+                                self.simulateNextCoords(leftWheel,rightWheel)
+                                self.driveMotors(leftWheel,rightWheel)
                                 return ["forward", 1, None]
                             index += 1
 
                         minpath = self.getAstarPath(intrealX, intrealY)
-                        #print(minpath)
+                        print("LEN 0: " + str(minpath))
 
-                        self.simulateNextCoords(0.15,0.15)
-                        self.driveMotors(0.15,0.15)
+                        self.simulateNextCoords(leftWheel,rightWheel)
+                        self.driveMotors(leftWheel,rightWheel)
                         return ["forward", 1, minpath]
 
                     elif (intrealX, intrealY) == path[1] and len(path) >= 2:
                         #Já chegou ao 'X' seguinte
                         newpath = path[1:]
-                        #print("newpath: " + str(newpath))
+                        print("newpath: " + str(newpath))
                         #Verifica se precisa de virar para ficar de frente para a próxima célula no path
                         dirToRotate = self.calcDirByCoords(path[0], path[1])
 
-                        if self.checkCorrectDir(dir,dirToRotate) == False:
+                        if self.checkCorrectDirAstar(dir,dirToRotate) == False:
                             if self.checkTurnLeft(dir, dirToRotate):
-                                self.simulateNextCoords(0.0,0.0)
-                                self.driveMotors(0.0,0.0)
+                                self.simulateNextCoords(-0.1,0.1)
+                                self.driveMotors(-0.1,0.1)
                                 return ["turningLeft", dirToRotate, newpath]
-                            self.simulateNextCoords(0.0,0.0)
-                            self.driveMotors(0.0,0.0)
+                            self.simulateNextCoords(0.1,-0.1)
+                            self.driveMotors(0.1,-0.1)
                             return ["turningRight", dirToRotate, newpath]
 
                     else:
@@ -603,13 +649,13 @@ class MyRob(CRobLinkAngs):
                         #Verifica se precisa de virar para ficar de frente para a próxima célula no path
                         dirToRotate = self.calcDirByCoords((intrealX, intrealY), path[1])
 
-                        if self.checkCorrectDir(dir,dirToRotate) == False:
+                        if self.checkCorrectDirAstar(dir,dirToRotate) == False:
                             if self.checkTurnLeft(dir, dirToRotate):
-                                self.simulateNextCoords(0.0,0.0)
-                                self.driveMotors(0.0,0.0)
+                                self.simulateNextCoords(-0.1,0.1)
+                                self.driveMotors(-0.1,0.1)
                                 return ["turningLeft", dirToRotate, newpath]
-                            self.simulateNextCoords(0.0,0.0)
-                            self.driveMotors(0.0,0.0)
+                            self.simulateNextCoords(0.1,-0.1)
+                            self.driveMotors(0.1,-0.1)
                             return ["turningRight", dirToRotate, newpath]
 
                     self.simulateNextCoords(leftWheel,rightWheel)
@@ -621,14 +667,19 @@ class MyRob(CRobLinkAngs):
                 #Caso a célula seguinte seja um sitio onde já tenha passado,
                 #  tenho de ver os 'X' que ainda têm quadrados adjacentes por descobrir e aplicar a*
                 elif self.checkIfFrontOld(intrealX, intrealY, dir):
+                    rob.fillWalls(intrealX, intrealY, dir, self.measures.irSensor[center_id], self.measures.irSensor[left_id], self.measures.irSensor[right_id])
                     self.fillIntermediateX(intrealX,intrealY, dir)
                     #rob.printMap()
 
                     minpath = self.getAstarPath(intrealX, intrealY)
-                    #print(minpath)
+                    print("checkiffrontold " + str(minpath))
 
                     #Edge case: a* para si mesmo, por ter detetado old path a frente mas ter um ' ' adjacente
                     if len(minpath) == 1:
+                        if self.finished == True and minpath[0] == self.beaconsList[0]:
+                            myPath = self.foundOptimalPath()
+                            self.finishProgram(myPath[1])
+                            
                         rob.fillWalls(intrealX, intrealY, dir, self.measures.irSensor[center_id], self.measures.irSensor[left_id], self.measures.irSensor[right_id])
                         #rob.printMap()
                         #Verificar se precisa de rodar para apontar para a célula ' '
@@ -637,20 +688,55 @@ class MyRob(CRobLinkAngs):
                         for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
                             if self.labMap[intrealY+new_position[1]][intrealX+new_position[0]] == ' ':
                                 if self.checkTurnLeft(dir, dirs[index]):
-                                    self.simulateNextCoords(0.0,0.0)
-                                    self.driveMotors(0.0,0.0)
+                                    self.simulateNextCoords(-0.1,0.1)
+                                    self.driveMotors(-0.1,0.1)
                                     return ["turningLeft", dirs[index], None]
-                                self.simulateNextCoords(0.0,0.0)
-                                self.driveMotors(0.0,0.0)
+                                self.simulateNextCoords(0.1,-0.1)
+                                self.driveMotors(0.1,-0.1)
                                 return ["turningRight", dirs[index], None]
                             index += 1
 
-                    self.simulateNextCoords(0.15,0.15)
-                    self.driveMotors(0.15,0.15)
+                    self.simulateNextCoords(0.0,0.0)
+                    self.driveMotors(0.0,0.0)
                     return ["forward", 1, minpath]
                 
                 #Para os ticks depois de escrever o 'X' em que ele ainda está na mesma célula, mas a seguinte está por descobrir (segue em frente)
                 else:
+                    rob.fillWalls(intrealX, intrealY, dir, self.measures.irSensor[center_id], self.measures.irSensor[left_id], self.measures.irSensor[right_id])
+                    #Caso tenha parede a frente
+                    if self.measures.irSensor[center_id] >= 1.4:
+                        # CORRIGIR COORDENADAS COM SENSOR FRONTAL
+                        number = 1 / self.measures.irSensor[center_id] 
+                        if closestDir == 0:
+                            self.x = intrealX - (number - 0.4)
+                        elif closestDir == 90:
+                            self.y = intrealY - (number - 0.4)
+                        elif closestDir == -90:
+                            self.y = intrealY + (number - 0.4)
+                        else: #180
+                            self.x = intrealX + (number - 0.4)
+
+                        #Vira 180 graus caso tenha parede a esquerda E parede a direita
+                        if self.measures.irSensor[right_id] >= 1.3 and  self.measures.irSensor[left_id] >= 1.3:
+                            #print('Turn around')
+                            self.simulateNextCoords(0.1,-0.1)
+                            self.driveMotors(0.1,-0.1)
+                            return ["turningRight", self.calcTurnAroundDir(dir), path]
+                        else:
+                            #Vira a esquerda caso nao tenha parede a esquerda
+                            #if self.measures.irSensor[right_id] >= self.measures.irSensor[left_id]:
+                            if self.measures.irSensor[right_id] <= 1.1:
+                                #print('Rotate Right')
+                                self.simulateNextCoords(0.1,-0.1)
+                                self.driveMotors(0.1,-0.1)
+                                return ["turningRight", self.calcTurnRightDir(dir), path]
+                            #Vira a direita
+                            else :
+                                #print('Rotate left')
+                                self.simulateNextCoords(-0.1,0.1)
+                                self.driveMotors(-0.1,0.1)
+                                return ["turningLeft", self.calcTurnLeftDir(dir), path]
+
                     self.fillIntermediateX(intrealX,intrealY, dir) # para ficar X de 1 em 1 no mapping.out
                     self.simulateNextCoords(leftWheel,rightWheel)
                     self.driveMotors(leftWheel,rightWheel)
@@ -658,35 +744,69 @@ class MyRob(CRobLinkAngs):
 
             #Não está no centro de nenhuma célula, continua em frente
             else:
-                if self.measures.irSensor[center_id] >= 0.7:
-                    leftWheel = 0.12
-                    rightWheel = 0.12
+                if self.measures.irSensor[center_id] >= 0.9:
+                    leftWheel = 0.1
+                    rightWheel = 0.1
 
                 self.counter += 1
                 
-                if self.counter % 2 == 0:
-                    if abs(self.y - intrealY) > 0.1:
-                        if closestDir == 0 :
-                            if self.y < intrealY:
-                                leftWheel -= 0.01
-                            elif self.y > intrealY:
-                                rightWheel -= 0.01
-                        elif closestDir == 180:
-                            if self.y < intrealY:
-                                rightWheel -= 0.01
-                            elif self.y > intrealY:
-                                leftWheel -= 0.01
-                    if abs(self.x - intrealX) > 0.1:
-                        if closestDir == 90:
-                            if self.x < intrealX:
-                                rightWheel -= 0.01
-                            elif self.x > intrealX:
-                                leftWheel -= 0.01
-                        else: # -90
-                            if self.x < intrealX:
-                                leftWheel -= 0.01
-                            elif self.x > intrealX:
-                                rightWheel -= 0.01
+                #Caso tenha parede a frente
+                if self.measures.irSensor[center_id] >= 1.7:
+                    # CORRIGIR COORDENADAS COM SENSOR FRONTAL
+                    number = 1 / self.measures.irSensor[center_id] 
+                    if closestDir == 0:
+                        self.x = intrealX - (number - 0.4)
+                    elif closestDir == 90:
+                        self.y = intrealY - (number - 0.4)
+                    elif closestDir == -90:
+                        self.y = intrealY + (number - 0.4)
+                    else: #180
+                        self.x = intrealX + (number - 0.4)
+
+                    #Vira 180 graus caso tenha parede a esquerda E parede a direita
+                    if self.measures.irSensor[right_id] >= 1.3 and  self.measures.irSensor[left_id] >= 1.3:
+                        #print('Turn around')
+                        self.simulateNextCoords(0.1,-0.1)
+                        self.driveMotors(0.1,-0.1)
+                        return ["turningRight", self.calcTurnAroundDir(dir), path]
+                    else:
+                        #Vira a esquerda caso nao tenha parede a esquerda
+                        #if self.measures.irSensor[right_id] >= self.measures.irSensor[left_id]:
+                        if self.measures.irSensor[right_id] <= 1.1:
+                            #print('Rotate Right')
+                            self.simulateNextCoords(0.1,-0.1)
+                            self.driveMotors(0.1,-0.1)
+                            return ["turningRight", self.calcTurnRightDir(dir), path]
+                        #Vira a direita
+                        else :
+                            #print('Rotate left')
+                            self.simulateNextCoords(-0.1,0.1)
+                            self.driveMotors(-0.1,0.1)
+                            return ["turningLeft", self.calcTurnLeftDir(dir), path]
+
+                #if self.counter % 1 == 0:
+                if abs(self.y - intrealY) >= 0.1:
+                    if closestDir == 0 :
+                        if self.y < intrealY:
+                            leftWheel -= 0.01
+                        elif self.y > intrealY:
+                            rightWheel -= 0.01
+                    elif closestDir == 180:
+                        if self.y < intrealY:
+                            rightWheel -= 0.01
+                        elif self.y > intrealY:
+                            leftWheel -= 0.01
+                if abs(self.x - intrealX) >= 0.1:
+                    if closestDir == 90:
+                        if self.x < intrealX:
+                            rightWheel -= 0.01
+                        elif self.x > intrealX:
+                            leftWheel -= 0.01
+                    else: # -90
+                        if self.x < intrealX:
+                            leftWheel -= 0.01
+                        elif self.x > intrealX:
+                            rightWheel -= 0.01
 
 
                 self.simulateNextCoords(leftWheel,rightWheel)
@@ -695,42 +815,46 @@ class MyRob(CRobLinkAngs):
         
         elif action == "adjust":
             if value == 0:
-                self.simulateNextCoords(0.00,0.00)
-                self.driveMotors(0.00,0.00)
+                if self.checkIfFrontOld(intrealX, intrealY, dir):
+                    self.simulateNextCoords(0.0,0.0)
+                    self.driveMotors(0.0,0.0)
+                else:
+                    self.simulateNextCoords(0.15,0.15)
+                    self.driveMotors(0.15,0.15)
                 return ["forward", 1, path]
 
         
-            if value % 2 == 0:
-                if closestDir == 180:
-                    if dir > 0:
-                        #print("adjustLeft dir: "+str(dir)+", closest "+str(closestDir)+", diffY "+str(diffY))
-                        leftWheel = -0.01
-                        rightWheel = 0.01
-                        self.simulateNextCoords(leftWheel,rightWheel)
-                        self.driveMotors(leftWheel,rightWheel)
-                        return [action, value-1, path]
-                    elif dir < 0:
-                        #print("adjustRight dir: "+str(dir)+", closest "+str(closestDir)+", diffY "+str(diffY))
-                        leftWheel = 0.01
-                        rightWheel = -0.01
-                        self.simulateNextCoords(leftWheel,rightWheel)
-                        self.driveMotors(leftWheel,rightWheel)
-                        return [action, value-1, path]
-                else:
-                    if dir < (closestDir+diffY):
-                        #print("adjustLeft dir: "+str(dir)+", closest "+str(closestDir)+", diffY "+str(diffY))
-                        leftWheel = -0.01
-                        rightWheel = 0.01
-                        self.simulateNextCoords(leftWheel,rightWheel)
-                        self.driveMotors(leftWheel,rightWheel)
-                        return [action, value-1, path]
-                    elif dir > (closestDir+diffY):
-                        #print("adjustRight dir: "+str(dir)+", closest "+str(closestDir)+", diffY "+str(diffY))
-                        leftWheel = 0.01
-                        rightWheel = -0.01
-                        self.simulateNextCoords(leftWheel,rightWheel)
-                        self.driveMotors(leftWheel,rightWheel)
-                        return [action, value-1, path]
+            #if value % 2 == 0:
+            if closestDir == 180:
+                if dir > 0:
+                    #print("adjustLeft dir: "+str(dir)+", closest "+str(closestDir)+", diffY "+str(diffY))
+                    leftWheel = -0.01
+                    rightWheel = 0.01
+                    self.simulateNextCoords(leftWheel,rightWheel)
+                    self.driveMotors(leftWheel,rightWheel)
+                    return [action, value-1, path]
+                elif dir < 0:
+                    #print("adjustRight dir: "+str(dir)+", closest "+str(closestDir)+", diffY "+str(diffY))
+                    leftWheel = 0.01
+                    rightWheel = -0.01
+                    self.simulateNextCoords(leftWheel,rightWheel)
+                    self.driveMotors(leftWheel,rightWheel)
+                    return [action, value-1, path]
+            else:
+                if dir < (closestDir+diffY):
+                    #print("adjustLeft dir: "+str(dir)+", closest "+str(closestDir)+", diffY "+str(diffY))
+                    leftWheel = -0.01
+                    rightWheel = 0.01
+                    self.simulateNextCoords(leftWheel,rightWheel)
+                    self.driveMotors(leftWheel,rightWheel)
+                    return [action, value-1, path]
+                elif dir > (closestDir+diffY):
+                    #print("adjustRight dir: "+str(dir)+", closest "+str(closestDir)+", diffY "+str(diffY))
+                    leftWheel = 0.01
+                    rightWheel = -0.01
+                    self.simulateNextCoords(leftWheel,rightWheel)
+                    self.driveMotors(leftWheel,rightWheel)
+                    return [action, value-1, path]
             
             self.simulateNextCoords(0.0,0.0)
             self.driveMotors(0.0,0.0)
@@ -741,15 +865,15 @@ class MyRob(CRobLinkAngs):
             if self.checkCorrectDir(dir,value) == False:
                 #if dir % 15 == 0:
                     #print("turnLeft dir: "+str(dir)+" to "+str(value))
-                leftWheel = -0.08
-                rightWheel = 0.08
+                leftWheel = -0.1
+                rightWheel = 0.1
                 self.simulateNextCoords(leftWheel,rightWheel)
                 self.driveMotors(leftWheel,rightWheel)
                 return [action, value, path]
             else:
                 self.simulateNextCoords(0.0,0.0)
                 self.driveMotors(0.0,0.0)
-                return ["adjust", 16, path]
+                return ["adjust", 5, path]
 
 
         elif action == "turningRight":
@@ -757,15 +881,15 @@ class MyRob(CRobLinkAngs):
             if self.checkCorrectDir(dir,value) == False:
                 #if dir % 15 == 0:
                     #print("turnRight dir: "+str(dir)+" to "+str(value))
-                leftWheel = 0.08
-                rightWheel = -0.08
+                leftWheel = 0.1
+                rightWheel = -0.1
                 self.simulateNextCoords(leftWheel,rightWheel)
                 self.driveMotors(leftWheel,rightWheel)
                 return [action, value, path]
             else:
                 self.simulateNextCoords(0.0,0.0)
                 self.driveMotors(0.0,0.0)
-                return ["adjust", 16, path]
+                return ["adjust", 5, path]
 
         
 
