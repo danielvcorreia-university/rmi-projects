@@ -99,23 +99,34 @@ class MyRob(CRobLinkAngs):
     def __init__(self, rob_name, rob_id, angles, host):
         CRobLinkAngs.__init__(self, rob_name, rob_id, angles, host)
         self.beaconsList = []
+        self.x = 28.0
+        self.y = 14.0
+        self.outleft = 0.0
+        self.outright = 0.0
+
+        #for testing
+        self.initialX = 0.0
+        self.initialY = 0.0
+
+        #testing motors adjust
+        self.counter = 0
 
     # In this map the center of cell (i,j), (i in 0..6, j in 0..13) is mapped to labMap[i*2][j*2].
     # to know if there is a wall on top of cell(i,j) (i in 0..5), check if the value of labMap[i*2+1][j*2] is space or not
     def setMap(self, labMap, minpathMap):
         self.labMap = labMap
-        self.minpathMap = minpathMap
+        #self.minpathMap = minpathMap
 
     def printMap(self, outMap=None):
         for l in reversed(self.labMap):
             print(''.join([str(l) for l in l]), file=outMap)
-        print("----------------------------")
-        for l in reversed(self.minpathMap):
-            print(''.join([str(l) for l in l]))
+        #print("----------------------------")
+        #for l in reversed(self.minpathMap):
+        #    print(''.join([str(l) for l in l]))
 
     def fillMap(self, x, y, symbol):
         self.labMap[y][x] = symbol
-        self.minpathMap[y][x] = symbol
+        #self.minpathMap[y][x] = symbol
 
     def calcTurnLeftDir(self, dir):
         if dir > -20 and dir < 20:
@@ -284,17 +295,21 @@ class MyRob(CRobLinkAngs):
         #Coordenadas de 'X' que ainda têm um ' ' adjacente
         saveCoords = self.getUnopenedX()
         if saveCoords == []:
-            self.printMap()
             myPath = self.foundOptimalPath()
             self.finishProgram(myPath[1])
             
 
         #Calcular o caminho mais curto para um 'X' através de a*
         minpath = None
+        first = True
         for i, unopenedX in enumerate(saveCoords):
             newpath = astar(self.labMap,(intrealX,intrealY), unopenedX)
-            if i == 0: minpath = newpath
-            if len(newpath) < len(minpath): minpath = newpath
+            if newpath != None:
+                if first == True: 
+                    minpath = newpath
+                    first = False
+                if len(newpath) < len(minpath): 
+                    minpath = newpath
 
         minpath = [v for i, v in enumerate(minpath) if i % 2 == 0]
         return minpath
@@ -351,31 +366,34 @@ class MyRob(CRobLinkAngs):
             if index == 0 or len(minPath) < len(myPath):
                 myPath = minPath
         print("myPath: "+str(myPath))
+        return [True, myPath]
 
-        optimalPath = None
-        for index, perm in enumerate(self.permutation(self.beaconsList[1:])):
-            minOptimalPath = [(28,14)]
-            for i in range(0, len(perm)+1):
-                if i == 0:
-                    path = astar(self.minpathMap,self.beaconsList[0], perm[i])
-                elif i == len(perm):
-                    path = astar(self.minpathMap, perm[i-1], self.beaconsList[0])
-                else:
-                    path = astar(self.minpathMap, perm[i-1], perm[i])
-                path = [v for i, v in enumerate(path) if i % 2 == 0]
-                for node in path[1:]:
-                    minOptimalPath.append(node)
-            if index == 0 or len(minOptimalPath) < len(optimalPath):
-                optimalPath = minOptimalPath
-        print("optimalPath: "+str(optimalPath))
+        # optimalPath = None
+        # for index, perm in enumerate(self.permutation(self.beaconsList[1:])):
+        #     minOptimalPath = [(28,14)]
+        #     for i in range(0, len(perm)+1):
+        #         if i == 0:
+        #             path = astar(self.minpathMap,self.beaconsList[0], perm[i])
+        #         elif i == len(perm):
+        #             path = astar(self.minpathMap, perm[i-1], self.beaconsList[0])
+        #         else:
+        #             path = astar(self.minpathMap, perm[i-1], perm[i])
+        #         path = [v for i, v in enumerate(path) if i % 2 == 0]
+        #         for node in path[1:]:
+        #             minOptimalPath.append(node)
+        #     if index == 0 or len(minOptimalPath) < len(optimalPath):
+        #         optimalPath = minOptimalPath
+        # print("optimalPath: "+str(optimalPath))
 
-        if len(myPath) == len(optimalPath):
-            return [True, myPath]
+        # if len(myPath) == len(optimalPath):
+        #     return [True, myPath]
         
-        return [False, optimalPath]
+        # return [False, optimalPath]
+        
 
     def finishProgram(self,myPath):
-        outMap = open(mapfile,"w")
+        #Path file
+        outMap = open(pathfile,"w")
         for node in myPath:
             if (node in self.beaconsList) and (self.beaconsList[0] != node):
                 s = str(node[0]-28) + " " + str(node[1]-14) + " #"+str(self.beaconsList.index(node))+"\n"
@@ -384,35 +402,51 @@ class MyRob(CRobLinkAngs):
             outMap.write(s)
         outMap.close()
 
+        #Map file
+        for beacon in self.beaconsList:
+            self.fillMap(beacon[0],beacon[1],str(self.beaconsList.index(beacon)))
+        self.printMap()
+        outMap = open(mapfile,"w")
+        self.printMap(outMap)
+        outMap.close()
+
         print("finish()")
         self.finish()
         exit(-1)
 
-    def cleanXBetweenWalls(self):
-        #Eliminar todos os 'X' que estão entre as paredes
-        for x in range (1, 55, 2):
-            for y in range (1, 27, 2):
-                if self.minpathMap[y][x] == 'X' and (self.minpathMap[y][x+1] == '-' or self.minpathMap[y][x-1] == '-' or self.minpathMap[y+1][x] == '-' or self.minpathMap[y-1][x] == '-' or self.minpathMap[y][x+1] == '|' or self.minpathMap[y][x-1] == '|' or self.minpathMap[y+1][x] == '|' or self.minpathMap[y-1][x] == '|'):
-                    self.minpathMap[y][x] = ' ' 
+    # def cleanXBetweenWalls(self):
+    #     #Eliminar todos os 'X' que estão entre as paredes
+    #     for x in range (1, 55, 2):
+    #         for y in range (1, 27, 2):
+    #             if self.minpathMap[y][x] == 'X' and (self.minpathMap[y][x+1] == '-' or self.minpathMap[y][x-1] == '-' or self.minpathMap[y+1][x] == '-' or self.minpathMap[y-1][x] == '-' or self.minpathMap[y][x+1] == '|' or self.minpathMap[y][x-1] == '|' or self.minpathMap[y+1][x] == '|' or self.minpathMap[y-1][x] == '|'):
+    #                 self.minpathMap[y][x] = ' ' 
 
-    def getUnopenedFromOptimalPath(self, optimalPath, intrealX, intrealY):
-        unopenedList = []
-        for node in optimalPath:
-            if self.labMap[node[1]][node[0]] == 'X' and (self.labMap[node[1]+1][node[0]] == ' ' or self.labMap[node[1]-1][node[0]] == ' ' or self.labMap[node[1]][node[0]+1] == ' ' or self.labMap[node[1]][node[0]-1] == ' '):
-                unopenedList.append(node)
+    # def getUnopenedFromOptimalPath(self, optimalPath, intrealX, intrealY):
+    #     unopenedList = []
+    #     for node in optimalPath:
+    #         if self.labMap[node[1]][node[0]] == 'X' and (self.labMap[node[1]+1][node[0]] == ' ' or self.labMap[node[1]-1][node[0]] == ' ' or self.labMap[node[1]][node[0]+1] == ' ' or self.labMap[node[1]][node[0]-1] == ' '):
+    #             unopenedList.append(node)
 
-        #print("unopenedList: "+str(unopenedList))
-        #Calcular o caminho mais curto para um 'X' através de a*
-        minpath = None
-        for i, unopenedX in enumerate(unopenedList):
-            newpath = astar(self.labMap,(intrealX,intrealY), unopenedX)
-            if i == 0: minpath = newpath
-            if len(newpath) < len(minpath): minpath = newpath
+    #     #print("unopenedList: "+str(unopenedList))
+    #     #Calcular o caminho mais curto para um 'X' através de a*
+    #     minpath = None
+    #     for i, unopenedX in enumerate(unopenedList):
+    #         newpath = astar(self.labMap,(intrealX,intrealY), unopenedX)
+    #         if i == 0: minpath = newpath
+    #         if len(newpath) < len(minpath): minpath = newpath
 
-        minpath = [v for i, v in enumerate(minpath) if i % 2 == 0]
-        #print("minpath para unopenedX: "+str(minpath))
-        return minpath
+    #     minpath = [v for i, v in enumerate(minpath) if i % 2 == 0]
+    #     #print("minpath para unopenedX: "+str(minpath))
+    #     return minpath
 
+    def simulateNextCoords(self, inleft, inright):
+        self.outleft = (inleft + self.outleft) / 2    # N(1,o^2)
+        self.outright = (inright + self.outright) / 2    # N(1,o^2)
+
+        lin = (self.outleft + self.outright) / 2
+        theta = (self.measures.compass * 1.570796) / 90
+        self.x = self.x + lin * cos(theta)
+        self.y = self.y + lin * sin(theta)
 
     def run(self):
         if self.status != 0:
@@ -421,12 +455,12 @@ class MyRob(CRobLinkAngs):
 
         state = 'stop'
         stopped_state = 'run'
-        first = True
-        initialX = 0.0
-        initialY = 0.0
         action = "forward"
         value = None
         path = None
+
+        #for testing
+        first = True
         
         for i in range(int(self.nBeacons)):
             self.beaconsList.append(None)
@@ -434,9 +468,10 @@ class MyRob(CRobLinkAngs):
 
         while True:
             self.readSensors()
+            #for testing
             if first:
-                initialX = self.measures.x
-                initialY = self.measures.y
+                self.initialX = self.measures.x
+                self.initialY = self.measures.y
                 first = False
 
             if self.measures.endLed:
@@ -455,7 +490,7 @@ class MyRob(CRobLinkAngs):
                     state='wait'
                 if self.measures.ground==0:
                     self.setVisitingLed(True);
-                [action, value, path] = self.wander(initialX, initialY, action, value, path)
+                [action, value, path] = self.wander(action, value, path)
             elif state=='wait':
                 self.setReturningLed(True)
                 if self.measures.visitingLed==True:
@@ -468,19 +503,21 @@ class MyRob(CRobLinkAngs):
                     self.setVisitingLed(False)
                 if self.measures.returningLed==True:
                     self.setReturningLed(False)
-                [action, value, path] = self.wander(initialX, initialY, action, value, path)
+                [action, value, path] = self.wander(action, value, path)
             
 
-    def wander(self, initialX, initialY, action, value, path):
-        realX = self.measures.x - initialX + 28
-        realY = self.measures.y - initialY + 14
-        intrealX = int(realX)
-        intrealY = int(realY)
+    def wander(self, action, value, path):
+        print("real: ("+str(self.measures.x - self.initialX + 28)+","+str(self.measures.y - self.initialY + 14) + ") vs sim: (" + str(self.x) + "," + str(self.y) + ")\n")
+        #print("sim: (" + str(self.x) + "," + str(self.y) + ")\n")
+        print("front sensor: " + str(self.measures.irSensor[0]))
+        
+        intrealX = int(self.x)
+        intrealY = int(self.y)
         if intrealX % 2 != 0: intrealX += 1
         if intrealY % 2 != 0: intrealY += 1
 
 
-        dir = int(self.measures.compass)
+        dir = self.measures.compass
         closestDir = self.calcClosestDir(dir)
             
         center_id = 0
@@ -492,8 +529,8 @@ class MyRob(CRobLinkAngs):
         dirToRotate = 0
 
         diffY = 0
-        if realY % 2 < 0.41 and realY % 2 > 0.21 and (closestDir == 0 or closestDir == 180): diffY = -2 #se y=16.3 quero que diminua
-        if realY % 2 < 1.79 and realY % 2 > 1.59 and (closestDir == 0 or closestDir == 180): diffY = 2  #se y=15.7 quero que aumente
+        if self.y % 2 < 0.41 and self.y % 2 > 0.21 and (closestDir == 0 or closestDir == 180): diffY = -2 #se y=16.3 quero que diminua
+        if self.y % 2 < 1.79 and self.y % 2 > 1.59 and (closestDir == 0 or closestDir == 180): diffY = 2  #se y=15.7 quero que aumente
 
 
         if action == "forward":
@@ -501,26 +538,29 @@ class MyRob(CRobLinkAngs):
             #print("beacons: "+str(self.beaconsList))
             if self.measures.collision:
                 #print('Turn around')
+                self.simulateNextCoords(0.0,0.0)
                 self.driveMotors(0.0,0.0)
                 return ["turningRight", self.calcTurnAroundDir(dir), [(intrealX,intrealY)]]
 
 
-            if ((realX % 2 < 0.21 or realX % 2 > 1.79) and (realY % 2 < 0.31 or realY % 2 > 1.69)) or ((realX % 2 < 0.31 or realX % 2 > 1.69) and (realY % 2 < 0.21 or realY % 2 > 1.79)):
-                
+            #if ((self.x % 2 < 0.21 or self.x % 2 > 1.79) and (self.y % 2 < 0.31 or self.y % 2 > 1.69)) or ((self.x % 2 < 0.31 or self.x % 2 > 1.69) and (self.y % 2 < 0.21 or self.y % 2 > 1.79)):
+            if ((self.x % 2 <= 0.3 or self.x % 2 >= 1.7) and (self.y % 2 <= 0.3 or self.y % 2 >= 1.7)):   
                 # Caso já tenha encontrado todos os beacons e ainda/já não esteja a descobrir mais caminhos
-                if (not None in self.beaconsList) and path == None and value == None:
-                    self.driveMotors(0.0,0.0)
+                # if (not None in self.beaconsList) and path == None and value == None:
+                #     self.simulateNextCoords(0.0,0.0)
+                #     self.driveMotors(0.0,0.0)
 
-                    foundBestPath = self.foundOptimalPath()
+                #     foundBestPath = self.foundOptimalPath()
 
-                    #Caso o meu path já seja o melhor possivel, vai escrever e acabar o programa
-                    if foundBestPath[0] != False: 
-                        self.finishProgram(foundBestPath[1])
+                #     #Caso o meu path já seja o melhor possivel, vai escrever e acabar o programa
+                #     if foundBestPath[0] != False: 
+                #         self.finishProgram(foundBestPath[1])
                     
-                    #Caso o meu path ainda não seja o melhor, vou ver quais células que estão no melhor path
-                    #ainda são 'X's com um ' ' adjacente no meu mapa, indo para o mais próximo
-                    minpath = self.getUnopenedFromOptimalPath(foundBestPath[1], intrealX, intrealY)
-                    return ["forward", 1, minpath]
+                #     #Caso o meu path ainda não seja o melhor, vou ver quais células que estão no melhor path
+                #     #ainda são 'X's com um ' ' adjacente no meu mapa, indo para o mais próximo
+                #     minpath = self.getUnopenedFromOptimalPath(foundBestPath[1], intrealX, intrealY)
+                #     return ["forward", 1, minpath]
+
                 
                 #Caso seja um sitio novo
                 if labMap[intrealY][intrealX] == ' ':
@@ -528,17 +568,32 @@ class MyRob(CRobLinkAngs):
                     if self.measures.ground != -1:
                         self.beaconsList[self.measures.ground] = (intrealX, intrealY)
 
+
                     rob.fillMap(intrealX, intrealY, 'X')
                     rob.fillWalls(intrealX, intrealY, dir, self.measures.irSensor[center_id], self.measures.irSensor[left_id], self.measures.irSensor[right_id])
-                    self.cleanXBetweenWalls()
+                    #self.cleanXBetweenWalls()
                     rob.printMap()
 
                     #print("center: "+str(self.measures.irSensor[center_id])+", left: "+str(self.measures.irSensor[left_id])+", right: "+str(self.measures.irSensor[right_id]))
                     #Caso tenha parede a frente
-                    if self.measures.irSensor[center_id] >= 1:
+                    if self.measures.irSensor[center_id] >= 1.2:
+
+                        print(self.measures.irSensor[center_id])
+                        # CORRIGIR COORDENADAS COM SENSOR FRONTAL
+                        number = 1 / self.measures.irSensor[center_id] 
+                        if closestDir == 0:
+                            self.x = intrealX - (number - 0.4)
+                        elif closestDir == 90:
+                            self.y = intrealY - (number - 0.4)
+                        elif closestDir == -90:
+                            self.y = intrealY + (number - 0.4)
+                        else: #180
+                            self.x = intrealX + (number - 0.4)
+
                         #Vira 180 graus caso tenha parede a esquerda E parede a direita
                         if self.measures.irSensor[right_id] >= 1.2 and  self.measures.irSensor[left_id] >= 1.2:
                             #print('Turn around')
+                            self.simulateNextCoords(0.0,0.0)
                             self.driveMotors(0.0,0.0)
                             return ["turningRight", self.calcTurnAroundDir(dir), path]
                         else:
@@ -546,11 +601,13 @@ class MyRob(CRobLinkAngs):
                             #if self.measures.irSensor[right_id] >= self.measures.irSensor[left_id]:
                             if self.measures.irSensor[right_id] <= 1.1:
                                 #print('Rotate Right')
+                                self.simulateNextCoords(0.0,0.0)
                                 self.driveMotors(0.0,0.0)
                                 return ["turningRight", self.calcTurnRightDir(dir), path]
                             #Vira a direita
                             else :
                                 #print('Rotate left')
+                                self.simulateNextCoords(0.0,0.0)
                                 self.driveMotors(0.0,0.0)
                                 return ["turningLeft", self.calcTurnLeftDir(dir), path]
                                 
@@ -562,8 +619,12 @@ class MyRob(CRobLinkAngs):
                     #     return ["turningRight", self.calcTurnRightDir(dir), path]
 
                     #Segue em frente
+                    # self.simulateNextCoords(leftWheel,rightWheel)
+                    # self.driveMotors(leftWheel,rightWheel)
+                    # return ["forward", None, path]
+                    self.simulateNextCoords(leftWheel,rightWheel)
                     self.driveMotors(leftWheel,rightWheel)
-                    return ["forward", None, path]
+                    return ["adjust", 8, path]
 
                 #Caso esteja a seguir um path do a*
                 elif path != None:
@@ -580,10 +641,13 @@ class MyRob(CRobLinkAngs):
                             if self.labMap[intrealY+new_position[1]][intrealX+new_position[0]] == ' ':
                                 if self.checkCorrectDir(dir,dirs[index]) == False:
                                     if self.checkTurnLeft(dir, dirs[index]):
+                                        self.simulateNextCoords(0.0,0.0)
                                         self.driveMotors(0.0,0.0)
                                         return ["turningLeft", dirs[index], None]
+                                    self.simulateNextCoords(0.0,0.0)
                                     self.driveMotors(0.0,0.0)
                                     return ["turningRight", dirs[index], None]
+                                self.simulateNextCoords(0.15,0.15)
                                 self.driveMotors(0.15,0.15)
                                 return ["forward", 1, None]
                             index += 1
@@ -591,6 +655,7 @@ class MyRob(CRobLinkAngs):
                         minpath = self.getAstarPath(intrealX, intrealY)
                         #print(minpath)
 
+                        self.simulateNextCoords(0.15,0.15)
                         self.driveMotors(0.15,0.15)
                         return ["forward", 1, minpath]
 
@@ -603,8 +668,10 @@ class MyRob(CRobLinkAngs):
 
                         if self.checkCorrectDir(dir,dirToRotate) == False:
                             if self.checkTurnLeft(dir, dirToRotate):
+                                self.simulateNextCoords(0.0,0.0)
                                 self.driveMotors(0.0,0.0)
                                 return ["turningLeft", dirToRotate, newpath]
+                            self.simulateNextCoords(0.0,0.0)
                             self.driveMotors(0.0,0.0)
                             return ["turningRight", dirToRotate, newpath]
 
@@ -615,11 +682,14 @@ class MyRob(CRobLinkAngs):
 
                         if self.checkCorrectDir(dir,dirToRotate) == False:
                             if self.checkTurnLeft(dir, dirToRotate):
+                                self.simulateNextCoords(0.0,0.0)
                                 self.driveMotors(0.0,0.0)
                                 return ["turningLeft", dirToRotate, newpath]
+                            self.simulateNextCoords(0.0,0.0)
                             self.driveMotors(0.0,0.0)
                             return ["turningRight", dirToRotate, newpath]
 
+                    self.simulateNextCoords(leftWheel,rightWheel)
                     self.driveMotors(leftWheel,rightWheel)
                     return ["forward", 1, newpath]
 
@@ -644,39 +714,77 @@ class MyRob(CRobLinkAngs):
                         for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
                             if self.labMap[intrealY+new_position[1]][intrealX+new_position[0]] == ' ':
                                 if self.checkTurnLeft(dir, dirs[index]):
+                                    self.simulateNextCoords(0.0,0.0)
                                     self.driveMotors(0.0,0.0)
                                     return ["turningLeft", dirs[index], None]
+                                self.simulateNextCoords(0.0,0.0)
                                 self.driveMotors(0.0,0.0)
                                 return ["turningRight", dirs[index], None]
                             index += 1
 
+                    self.simulateNextCoords(0.15,0.15)
                     self.driveMotors(0.15,0.15)
                     return ["forward", 1, minpath]
                 
                 #Para os ticks depois de escrever o 'X' em que ele ainda está na mesma célula, mas a seguinte está por descobrir (segue em frente)
                 else:
                     self.fillIntermediateX(intrealX,intrealY, dir) # para ficar X de 1 em 1 no mapping.out
+                    self.simulateNextCoords(leftWheel,rightWheel)
                     self.driveMotors(leftWheel,rightWheel)
                     return["forward", 1, path]
 
             #Não está no centro de nenhuma célula, continua em frente
             else:
-                if closestDir == 180 : diffY = 0
-                if closestDir == 0 :
-                    res = dir - diffY
-                else:
-                    res = abs(dir) - abs(closestDir) - diffY
-                #Caso, devido ao erro dos motores, haja um desvio significativo na orientação, paramos para ajustar de novo
-                if abs(res) >= 2:
-                    self.driveMotors(0.0,0.0)
-                    return ["adjust", 8, path]
+                # if closestDir == 180 : diffY = 0
+                # if closestDir == 0 :
+                #     res = dir - diffY
+                # else:
+                #     res = abs(dir) - abs(closestDir) - diffY
+                # #Caso, devido ao erro dos motores, haja um desvio significativo na orientação, paramos para ajustar de novo
+                # if abs(res) >= 4:
+                #     self.simulateNextCoords(0.0,0.0)
+                #     self.driveMotors(0.0,0.0)
+                #     return ["ad
+                # just", 8, path]
+                if self.measures.irSensor[center_id] >= 0.7:
+                    leftWheel = 0.12
+                    rightWheel = 0.12
 
+                self.counter += 1
+                
+                if self.counter % 2 == 0:
+                    if abs(self.y - intrealY) > 0.1:
+                        if closestDir == 0 :
+                            if self.y < intrealY:
+                                leftWheel -= 0.01
+                            elif self.y > intrealY:
+                                rightWheel -= 0.01
+                        elif closestDir == 180:
+                            if self.y < intrealY:
+                                rightWheel -= 0.01
+                            elif self.y > intrealY:
+                                leftWheel -= 0.01
+                    if abs(self.x - intrealX) > 0.1:
+                        if closestDir == 90:
+                            if self.x < intrealX:
+                                rightWheel -= 0.01
+                            elif self.x > intrealX:
+                                leftWheel -= 0.01
+                        else: # -90
+                            if self.x < intrealX:
+                                leftWheel -= 0.01
+                            elif self.x > intrealX:
+                                rightWheel -= 0.01
+
+
+                self.simulateNextCoords(leftWheel,rightWheel)
                 self.driveMotors(leftWheel,rightWheel)
                 return["forward", 1, path]
         
         elif action == "adjust":
             if value == 0:
-                self.driveMotors(0.05,0.05)
+                self.simulateNextCoords(0.00,0.00)
+                self.driveMotors(0.00,0.00)
                 return ["forward", 1, path]
 
         
@@ -686,12 +794,14 @@ class MyRob(CRobLinkAngs):
                         #print("adjustLeft dir: "+str(dir)+", closest "+str(closestDir)+", diffY "+str(diffY))
                         leftWheel = -0.01
                         rightWheel = 0.01
+                        self.simulateNextCoords(leftWheel,rightWheel)
                         self.driveMotors(leftWheel,rightWheel)
                         return [action, value-1, path]
                     elif dir < 0:
                         #print("adjustRight dir: "+str(dir)+", closest "+str(closestDir)+", diffY "+str(diffY))
                         leftWheel = 0.01
                         rightWheel = -0.01
+                        self.simulateNextCoords(leftWheel,rightWheel)
                         self.driveMotors(leftWheel,rightWheel)
                         return [action, value-1, path]
                 else:
@@ -699,42 +809,51 @@ class MyRob(CRobLinkAngs):
                         #print("adjustLeft dir: "+str(dir)+", closest "+str(closestDir)+", diffY "+str(diffY))
                         leftWheel = -0.01
                         rightWheel = 0.01
+                        self.simulateNextCoords(leftWheel,rightWheel)
                         self.driveMotors(leftWheel,rightWheel)
                         return [action, value-1, path]
                     elif dir > (closestDir+diffY):
                         #print("adjustRight dir: "+str(dir)+", closest "+str(closestDir)+", diffY "+str(diffY))
                         leftWheel = 0.01
                         rightWheel = -0.01
+                        self.simulateNextCoords(leftWheel,rightWheel)
                         self.driveMotors(leftWheel,rightWheel)
                         return [action, value-1, path]
             
+            self.simulateNextCoords(0.0,0.0)
             self.driveMotors(0.0,0.0)
             return [action, value-1, path]
 
         elif action == "turningLeft":
+            self.counter = 0
             if self.checkCorrectDir(dir,value) == False:
                 #if dir % 15 == 0:
                     #print("turnLeft dir: "+str(dir)+" to "+str(value))
                 leftWheel = -0.08
                 rightWheel = 0.08
+                self.simulateNextCoords(leftWheel,rightWheel)
                 self.driveMotors(leftWheel,rightWheel)
                 return [action, value, path]
             else:
+                self.simulateNextCoords(0.0,0.0)
                 self.driveMotors(0.0,0.0)
-                return ["adjust", 14, path]
+                return ["adjust", 16, path]
 
 
         elif action == "turningRight":
+            self.counter = 0
             if self.checkCorrectDir(dir,value) == False:
                 #if dir % 15 == 0:
                     #print("turnRight dir: "+str(dir)+" to "+str(value))
                 leftWheel = 0.08
                 rightWheel = -0.08
+                self.simulateNextCoords(leftWheel,rightWheel)
                 self.driveMotors(leftWheel,rightWheel)
                 return [action, value, path]
             else:
+                self.simulateNextCoords(0.0,0.0)
                 self.driveMotors(0.0,0.0)
-                return ["adjust", 14, path]
+                return ["adjust", 16, path]
 
         
 
@@ -770,7 +889,8 @@ rob_name = "pClient1"
 host = "localhost"
 pos = 1
 mapc = None
-mapfile = "myMap.out"
+mapfile = "myrob.map"
+pathfile = "myrob.path"
 
 for i in range(1, len(sys.argv),2):
     if (sys.argv[i] == "--host" or sys.argv[i] == "-h") and i != len(sys.argv) - 1:
@@ -782,7 +902,8 @@ for i in range(1, len(sys.argv),2):
     elif (sys.argv[i] == "--map" or sys.argv[i] == "-m") and i != len(sys.argv) - 1:
         mapc = Map(sys.argv[i + 1])
     elif (sys.argv[i] == "--file" or sys.argv[i] == "-f") and i != len(sys.argv) - 1:
-        mapfile = sys.argv[i + 1]
+        mapfile = sys.argv[i + 1] + ".map"
+        pathfile = sys.argv[i + 1] + ".path"
     else:
         print("Unkown argument", sys.argv[i])
         quit()

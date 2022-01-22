@@ -291,10 +291,15 @@ class MyRob(CRobLinkAngs):
 
         #Calcular o caminho mais curto para um 'X' através de a*
         minpath = None
+        first = True
         for i, unopenedX in enumerate(saveCoords):
             newpath = astar(self.labMap,(intrealX,intrealY), unopenedX)
-            if i == 0: minpath = newpath
-            if len(newpath) < len(minpath): minpath = newpath
+            if newpath != None:
+                if first == True: 
+                    minpath = newpath
+                    first = False
+                if len(newpath) < len(minpath): 
+                    minpath = newpath
 
         minpath = [v for i, v in enumerate(minpath) if i % 2 == 0]
         return minpath
