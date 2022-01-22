@@ -46,7 +46,8 @@ case $challenge in
         ;;
     4)
 	cd C4; python3 mainRob.py -h "$host" -p "$pos" -r "$robname" -f "$outfile"
-	mv "$outfile" ../"$outfile"
+	mv "${outfile}.map" ../"${outfile}.map"
+	mv "${outfile}.path" ../"${outfile}.path"
 	;;
 esac
 
