@@ -117,12 +117,16 @@ class MyRob(CRobLinkAngs):
         self.labMap = labMap
 
     def printMap(self, outMap=None):
-        for l in reversed(self.labMap):
+    	index = 1
+    	for l in reversed(self.labMap):
             #print(''.join([str(l) for l in l]), file=outMap)
             line = ''
+            if index == len(self.labMap):
+            	break;
             for i in range(1, len(l)):
             	line += l[i]
             print(''.join([line]), file=outMap)
+            index += 1
 
     def fillMap(self, x, y, symbol):
         self.labMap[y][x] = symbol
