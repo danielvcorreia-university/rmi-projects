@@ -117,16 +117,12 @@ class MyRob(CRobLinkAngs):
         self.labMap = labMap
 
     def printMap(self, outMap=None):
-    	index = 1
-    	for l in reversed(self.labMap):
+        for l in reversed(self.labMap):
             #print(''.join([str(l) for l in l]), file=outMap)
             line = ''
-            if index == len(self.labMap):
-            	break;
             for i in range(1, len(l)):
-            	line += l[i]
+                line += l[i]
             print(''.join([line]), file=outMap)
-            index += 1
 
     def fillMap(self, x, y, symbol):
         self.labMap[y][x] = symbol
@@ -256,7 +252,6 @@ class MyRob(CRobLinkAngs):
                 
     def calcDirByCoords(self, currCoords, nextCoords):
         res = (nextCoords[0]-currCoords[0], nextCoords[1]-currCoords[1])
-        possibleRes = [(2, 0), (-2, 0), (0, 2), (0, -2)] # right, left, up, down
 
         if res == (2,0):
             return 0
@@ -614,27 +609,28 @@ class MyRob(CRobLinkAngs):
                         #Verificar se precisa de rodar para apontar para a célula ' '
                         dirs = [-90, 90, 180, 0]
                         index = 0
+                        print("a")
                         for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
                             if self.labMap[intrealY+new_position[1]][intrealX+new_position[0]] == ' ':
                                 if self.checkCorrectDirAstar(dir,dirs[index]) == False:
                                     if self.checkTurnLeft(dir, dirs[index]):
-                                        self.simulateNextCoords(-0.1,0.1)
-                                        self.driveMotors(-0.1,0.1)
+                                        self.simulateNextCoords(-0.15,-0.15)
+                                        self.driveMotors(-0.15,-0.15)
                                         return ["turningLeft", dirs[index], None]
-                                    self.simulateNextCoords(0.1,-0.1)
-                                    self.driveMotors(0.1,-0.1)
+                                    self.simulateNextCoords(-0.15,-0.15)
+                                    self.driveMotors(-0.15,-0.15)
                                     return ["turningRight", dirs[index], None]
                                 self.simulateNextCoords(leftWheel,rightWheel)
                                 self.driveMotors(leftWheel,rightWheel)
                                 return ["forward", 1, None]
                             index += 1
 
-                        minpath = self.getAstarPath(intrealX, intrealY)
-                        print("LEN 0: " + str(minpath))
+                        # minpath = self.getAstarPath(intrealX, intrealY)
+                        # print("LEN 0: " + str(minpath))
 
                         self.simulateNextCoords(leftWheel,rightWheel)
                         self.driveMotors(leftWheel,rightWheel)
-                        return ["forward", 1, minpath]
+                        return ["forward", 1, None]
 
                     elif (intrealX, intrealY) == path[1] and len(path) >= 2:
                         #Já chegou ao 'X' seguinte
@@ -653,9 +649,17 @@ class MyRob(CRobLinkAngs):
                             return ["turningRight", dirToRotate, newpath]
 
                     else:
+                        print("b")
                         #Estou no nó inicial, verificar direção para o caso em que o caminho a* não seja para a frente
                         #Verifica se precisa de virar para ficar de frente para a próxima célula no path
-                        dirToRotate = self.calcDirByCoords((intrealX, intrealY), path[1])
+                        if (intrealX, intrealY) == path[0]:
+                            dirToRotate = self.calcDirByCoords((intrealX, intrealY), path[1])
+                        else:
+                            dirToRotate = self.calcDirByCoords((intrealX, intrealY), path[0])
+                        print(str(intrealX) + "," + str(intrealY))
+                        print(path[0])
+                        print(path[1])
+                        print(dirToRotate)
 
                         if self.checkCorrectDirAstar(dir,dirToRotate) == False:
                             if self.checkTurnLeft(dir, dirToRotate):
@@ -666,6 +670,7 @@ class MyRob(CRobLinkAngs):
                             self.driveMotors(0.1,-0.1)
                             return ["turningRight", dirToRotate, newpath]
 
+                    print("c")
                     self.simulateNextCoords(leftWheel,rightWheel)
                     self.driveMotors(leftWheel,rightWheel)
                     return ["forward", 1, newpath]
@@ -696,11 +701,11 @@ class MyRob(CRobLinkAngs):
                         for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
                             if self.labMap[intrealY+new_position[1]][intrealX+new_position[0]] == ' ':
                                 if self.checkTurnLeft(dir, dirs[index]):
-                                    self.simulateNextCoords(-0.1,0.1)
-                                    self.driveMotors(-0.1,0.1)
+                                    self.simulateNextCoords(-0.15,-0.15)
+                                    self.driveMotors(-0.15,-0.15)
                                     return ["turningLeft", dirs[index], None]
-                                self.simulateNextCoords(0.1,-0.1)
-                                self.driveMotors(0.1,-0.1)
+                                self.simulateNextCoords(-0.15,-0.15)
+                                self.driveMotors(-0.15,-0.15)
                                 return ["turningRight", dirs[index], None]
                             index += 1
 
