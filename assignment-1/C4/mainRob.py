@@ -541,8 +541,6 @@ class MyRob(CRobLinkAngs):
                     #print("center: "+str(self.measures.irSensor[center_id])+", left: "+str(self.measures.irSensor[left_id])+", right: "+str(self.measures.irSensor[right_id]))
                     #Caso tenha parede a frente
                     if self.measures.irSensor[center_id] >= 1.4:
-
-                        print(self.measures.irSensor[center_id])
                         # CORRIGIR COORDENADAS COM SENSOR FRONTAL
                         number = 1 / self.measures.irSensor[center_id] 
                         if closestDir == 0:
@@ -592,7 +590,6 @@ class MyRob(CRobLinkAngs):
 
                 #Caso esteja a seguir um path do a*
                 elif path != None:
-                    print("@@@")
                     newpath = path
                     if self.measures.irSensor[center_id] >= 0.9:
                         leftWheel = 0.1
@@ -609,7 +606,6 @@ class MyRob(CRobLinkAngs):
                         #Verificar se precisa de rodar para apontar para a célula ' '
                         dirs = [-90, 90, 180, 0]
                         index = 0
-                        print("a")
                         for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
                             if self.labMap[intrealY+new_position[1]][intrealX+new_position[0]] == ' ':
                                 if self.checkCorrectDirAstar(dir,dirs[index]) == False:
@@ -635,7 +631,7 @@ class MyRob(CRobLinkAngs):
                     elif (intrealX, intrealY) == path[1] and len(path) >= 2:
                         #Já chegou ao 'X' seguinte
                         newpath = path[1:]
-                        print("newpath: " + str(newpath))
+                        #print("newpath: " + str(newpath))
                         #Verifica se precisa de virar para ficar de frente para a próxima célula no path
                         dirToRotate = self.calcDirByCoords(path[0], path[1])
 
@@ -649,17 +645,12 @@ class MyRob(CRobLinkAngs):
                             return ["turningRight", dirToRotate, newpath]
 
                     else:
-                        print("b")
                         #Estou no nó inicial, verificar direção para o caso em que o caminho a* não seja para a frente
                         #Verifica se precisa de virar para ficar de frente para a próxima célula no path
                         if (intrealX, intrealY) == path[0]:
                             dirToRotate = self.calcDirByCoords((intrealX, intrealY), path[1])
                         else:
                             dirToRotate = self.calcDirByCoords((intrealX, intrealY), path[0])
-                        print(str(intrealX) + "," + str(intrealY))
-                        print(path[0])
-                        print(path[1])
-                        print(dirToRotate)
 
                         if self.checkCorrectDirAstar(dir,dirToRotate) == False:
                             if self.checkTurnLeft(dir, dirToRotate):
@@ -670,7 +661,6 @@ class MyRob(CRobLinkAngs):
                             self.driveMotors(0.1,-0.1)
                             return ["turningRight", dirToRotate, newpath]
 
-                    print("c")
                     self.simulateNextCoords(leftWheel,rightWheel)
                     self.driveMotors(leftWheel,rightWheel)
                     return ["forward", 1, newpath]
@@ -685,7 +675,7 @@ class MyRob(CRobLinkAngs):
                     #rob.printMap()
 
                     minpath = self.getAstarPath(intrealX, intrealY)
-                    print("checkiffrontold " + str(minpath))
+                    #print("checkiffrontold " + str(minpath))
 
                     #Edge case: a* para si mesmo, por ter detetado old path a frente mas ter um ' ' adjacente
                     if len(minpath) == 1:
