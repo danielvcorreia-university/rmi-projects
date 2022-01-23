@@ -1,6 +1,6 @@
 #!/bin/bash
 
-challenge="1"
+challenge="4"
 host="localhost"
 robname="theAgent"
 pos="0"
