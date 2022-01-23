@@ -110,6 +110,7 @@ class MyRob(CRobLinkAngs):
 
         #testing motors adjust
         self.counter = 0
+        self.collided = False
 
     # In this map the center of cell (i,j), (i in 0..6, j in 0..13) is mapped to labMap[i*2][j*2].
     # to know if there is a wall on top of cell(i,j) (i in 0..5), check if the value of labMap[i*2+1][j*2] is space or not
@@ -162,11 +163,11 @@ class MyRob(CRobLinkAngs):
             return 90
 
     def calcClosestDir(self,dir):
-        if dir > -20 and dir < 20:
+        if dir > -45 and dir < 45:
             return 0
-        elif dir > 70 and dir < 110:
+        elif dir > 45 and dir < 135:
             return 90
-        elif dir > 160 or dir < -160:
+        elif dir > 135 or dir < -135:
             return 180
         else: #if dir > -110 and dir < -70:
             return -90
@@ -206,22 +207,22 @@ class MyRob(CRobLinkAngs):
 
     def checkIfFrontOld(self, x, y, dir):
         if dir > -20 and dir < 20:
-            if labMap[y][x+2] == 'X' and labMap[y][x+1] == 'X':
+            if labMap[y][x+2] == 'X' :
                 return True
             return False
 
         elif dir > 70 and dir < 110:
-            if labMap[y+2][x] == 'X' and labMap[y+1][x] == 'X':
+            if labMap[y+2][x] == 'X' :
                 return True
             return False
 
         elif dir > 160 or dir < -160:
-            if labMap[y][x-2] == 'X' and labMap[y][x-1] == 'X':
+            if labMap[y][x-2] == 'X' :
                 return True
             return False
 
         else: #if dir > -110 and dir < -70:
-            if labMap[y-2][x] == 'X' and labMap[y-1][x] == 'X':
+            if labMap[y-2][x] == 'X':
                 return True
             return False
 
@@ -267,16 +268,19 @@ class MyRob(CRobLinkAngs):
             return -90
 
     def checkCorrectDir(self, dir, dirToRotate):
-        if dir > -20 and dir < 20 and dirToRotate == 0:
-            return True
-        elif dir > 70 and dir < 110 and dirToRotate == 90:
-            return True
-        elif (dir > 160 or dir < -160) and dirToRotate == 180:
-            return True
-        elif dir > -110 and dir < -70 and dirToRotate == -90:
-            return True
-        else: 
-            return False
+        if dirToRotate == 180:
+            if dir >= 160 or dir <= -160:
+                return True
+        elif dirToRotate == 170:
+            if dir >= 150 or dir <= -170:
+                return True
+        elif dirToRotate == -170:
+            if dir >= 170 or dir <= -150:
+                return True
+        else:
+            if abs(dir - dirToRotate) <= 20:
+                return True
+        return False
     
     def checkCorrectDirAstar(self, dir, dirToRotate):
         if dir > -45 and dir < 45 and dirToRotate == 0:
@@ -387,6 +391,45 @@ class MyRob(CRobLinkAngs):
         theta = (self.measures.compass * 1.570796) / 90
         self.x = self.x + lin * cos(theta)
         self.y = self.y + lin * sin(theta)
+
+    def collisionAngleFix(self, intrealX, intrealY):
+        Xdif = abs(self.x - intrealX)
+        Ydif = abs(self.y - intrealY)
+
+        if self.x < intrealX and self.y < intrealY:
+            if Xdif < 0.2:
+                return 80
+            elif Ydif < 0.2:
+                return 10
+            else:
+                return 45
+        elif self.x < intrealX and self.y > intrealY:
+            if Xdif < 0.2:
+                return -80
+            elif Ydif < 0.2:
+                return -10
+            else:
+                return -45
+        elif self.x > intrealX and self.y > intrealY:
+            if Xdif < 0.2:
+                return -100
+            elif Ydif < 0.2:
+                return -170
+            else:
+                return -135
+        elif self.x > intrealX and self.y < intrealY:
+            if Xdif < 0.2:
+                return 100
+            elif Ydif < 0.2:
+                return 170
+            else:
+                return 135
+
+    def turnLeftOrRight(self, dir):
+        if (dir >= 90 and dir <= 180) or (dir >= -90 and dir <= 0):
+            return True # left
+        else:
+            return False
 
     def run(self):
         if self.status != 0:
@@ -508,46 +551,57 @@ class MyRob(CRobLinkAngs):
             #print("beacons: "+str(self.beaconsList))
             if self.measures.collision: 
                 #print('Turn around')
-                self.simulateNextCoords(0.1,-0.1)
-                self.driveMotors(0.1,-0.1)
-                return ["turningRight", self.calcTurnAroundDir(dir), [(intrealX,intrealY)]]
+                self.collided = True
+                self.simulateNextCoords(0.0,0.0)
+                self.driveMotors(0.0,0.0)
+                if self.turnLeftOrRight(dir):
+                    return ["turningLeft", self.collisionAngleFix(intrealX, intrealY), None]
+                else:
+                    return ["turningRight", self.collisionAngleFix(intrealX, intrealY), None]
 
             #if ((self.x % 2 < 0.21 or self.x % 2 > 1.79) and (self.y % 2 < 0.31 or self.y % 2 > 1.69)) or ((self.x % 2 < 0.31 or self.x % 2 > 1.69) and (self.y % 2 < 0.21 or self.y % 2 > 1.79)):
-            if ((self.x % 2 <= 0.3 or self.x % 2 >= 1.7) and (self.y % 2 <= 0.3 or self.y % 2 >= 1.7)):   
+            if ((self.x % 2 <= 0.3 or self.x % 2 >= 1.7) and (self.y % 2 <= 0.3 or self.y % 2 >= 1.7)):  
+                # if collided last tick
+                if self.collided == True:
+                    print("SAFA")
+                    self.collided = False
+                    self.simulateNextCoords(0.0,0.0)
+                    self.driveMotors(0.0,0.0)
+                    return ["turningRight", closestDir, None]
+
+                # CORRIGIR COORDENADAS COM SENSORES LATERAIS
+                if self.measures.irSensor[left_id] >= 2.5:
+                    number = 1 / self.measures.irSensor[left_id] 
+                    if closestDir == 0:
+                        self.y = intrealY - (number - 0.4)
+                    elif closestDir == 90:
+                        self.x = intrealX + (number - 0.4)
+                    elif closestDir == -90:
+                        self.x = intrealX - (number - 0.4)
+                    else: #180
+                        self.y = intrealY + (number - 0.4)
+
+                elif self.measures.irSensor[right_id] >= 2.5:
+                    number = 1 / self.measures.irSensor[right_id] 
+                    if closestDir == 0:
+                        self.y = intrealY + (number - 0.4)
+                    elif closestDir == 90:
+                        self.x = intrealX - (number - 0.4)
+                    elif closestDir == -90:
+                        self.x = intrealX + (number - 0.4)
+                    else: #180
+                        self.y = intrealY - (number - 0.4)
+
                 #Caso seja um sitio novo
                 if labMap[intrealY][intrealX] == ' ':
                     #Escrever 'X' no local e escrever as paredes a volta
                     if self.measures.ground != -1:
                         self.beaconsList[self.measures.ground] = (intrealX, intrealY)
 
-
                     rob.fillMap(intrealX, intrealY, 'X')
                     rob.fillWalls(intrealX, intrealY, dir, self.measures.irSensor[center_id], self.measures.irSensor[left_id], self.measures.irSensor[right_id])
                     #self.cleanXBetweenWalls()
                     rob.printMap()
-
-                    # CORRIGIR COORDENADAS COM SENSORES LATERAIS
-                    if self.measures.irSensor[left_id] >= 2.5:
-                        number = 1 / self.measures.irSensor[left_id] 
-                        if closestDir == 0:
-                            self.y = intrealY - (number - 0.4)
-                        elif closestDir == 90:
-                            self.x = intrealX + (number - 0.4)
-                        elif closestDir == -90:
-                            self.x = intrealX - (number - 0.4)
-                        else: #180
-                            self.y = intrealY + (number - 0.4)
-
-                    elif self.measures.irSensor[right_id] >= 2.5:
-                        number = 1 / self.measures.irSensor[right_id] 
-                        if closestDir == 0:
-                            self.y = intrealY + (number - 0.4)
-                        elif closestDir == 90:
-                            self.x = intrealX - (number - 0.4)
-                        elif closestDir == -90:
-                            self.x = intrealX + (number - 0.4)
-                        else: #180
-                            self.y = intrealY - (number - 0.4)
 
                     #print("center: "+str(self.measures.irSensor[center_id])+", left: "+str(self.measures.irSensor[left_id])+", right: "+str(self.measures.irSensor[right_id]))
                     #Caso tenha parede a frente
